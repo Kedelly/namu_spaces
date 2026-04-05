@@ -364,34 +364,49 @@
     </div>
   </div>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/db.js"></script>
+   <!-- ===== Firebase SDK (must load before db.js) ===== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/db.js"></script>
   <script src="js/main.js"></script>
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       // Render team from DB
       const teamGrid = document.getElementById('team-grid');
-      const team = NamuDB.getTeam();
-      if (teamGrid && team.length) {
-        teamGrid.innerHTML = team.map(member => {
-          const initials = member.name.split(' ').map(w => w.charAt(0).toUpperCase()).slice(0, 2).join('');
-          return `
-            <div class="team-card reveal">
-              <div class="team-card-img">
-                <span class="avatar-initials">${initials}</span>
-                <img
-                  src="${member.image}"
-                  alt="${member.name}"
-                  loading="lazy"
-                  onload="this.classList.add('loaded')"
-                  onerror="this.classList.add('errored')">
-              </div>
-              <h3>${member.name}</h3>
-              <div class="team-role">${member.role}</div>
-              <p class="team-bio">${member.bio}</p>
-            </div>`;
-        }).join('');
-        initScrollAnimations();
+      if (teamGrid) {
+        // Show skeleton while loading from Firestore
+        teamGrid.innerHTML = '<div class="skeleton" style="height:320px;border-radius:12px;"></div>'.repeat(1);
+        try {
+          const team = await NamuDB.getTeam();
+          if (!team.length) {
+            teamGrid.innerHTML = '<div class="empty-state"><p>Team profiles coming soon.</p></div>';
+          } else {
+            teamGrid.innerHTML = team.map(member => {
+              const initials = member.name.split(' ').map(w => w.charAt(0).toUpperCase()).slice(0, 2).join('');
+              return `
+                <div class="team-card reveal">
+                  <div class="team-card-img">
+                    <span class="avatar-initials">${initials}</span>
+                    <img
+                      src="${member.image}"
+                      alt="${member.name}"
+                      loading="lazy"
+                      onload="this.classList.add('loaded')"
+                      onerror="this.classList.add('errored')">
+                  </div>
+                  <h3>${member.name}</h3>
+                  <div class="team-role">${member.role}</div>
+                  <p class="team-bio">${member.bio}</p>
+                </div>`;
+            }).join('');
+            initScrollAnimations();
+          }
+        } catch (e) {
+          teamGrid.innerHTML = '<div class="empty-state"><p>Could not load team profiles.</p></div>';
+        }
       }
     });
   </script>
