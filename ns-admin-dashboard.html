@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Admin Dashboard — Namu Spaces</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ====================== SIDEBAR ====================== -->
+<aside class="admin-sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-logo" style="display:flex;align-items:center;gap:.5rem;">
+      <img src="images/logo.jpg" alt="" style="height:34px;width:34px;border-radius:6px;object-fit:cover;flex-shrink:0;">
+      <span>Namu <span>Spaces</span></span>
+    </span>
+    <span class="brand-sub">Admin Dashboard</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <button class="sidebar-link active" data-panel="dashboard"><span class="link-icon">📊</span> Dashboard</button>
+    <div class="nav-section-label">Content</div>
+    <button class="sidebar-link" data-panel="services"><span class="link-icon">🛎️</span> Services &amp; Pricing</button>
+    <button class="sidebar-link" data-panel="portfolio"><span class="link-icon">🖼️</span> Portfolio</button>
+    <button class="sidebar-link" data-panel="blog"><span class="link-icon">✍️</span> Blog Articles</button>
+    <button class="sidebar-link" data-panel="testimonials"><span class="link-icon">💬</span> Testimonials</button>
+    <button class="sidebar-link" data-panel="team"><span class="link-icon">👥</span> Team</button>
+    <div class="nav-section-label">Clients</div>
+    <button class="sidebar-link" data-panel="inquiries">
+      <span class="link-icon">📩</span> Inquiries
+      <span class="sidebar-badge" id="inquiries-badge" style="display:none">0</span>
+    </button>
+    <div class="nav-section-label">Admin</div>
+    <button class="sidebar-link" data-panel="settings"><span class="link-icon">⚙️</span> Site Settings</button>
+    <button class="sidebar-link" data-panel="security"><span class="link-icon">🔒</span> Security</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div>
+        <div class="user-name" id="user-name">Admin</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <button class="btn-logout" id="logout-btn">🚪 Sign Out</button>
+  </div>
+</aside>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ====================== MAIN ====================== -->
+<main class="admin-main">
+  <!-- Topbar -->
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="openSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-subtitle" id="topbar-subtitle">Welcome back — here's what's happening</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge" id="sync-badge">● Live</span>
+      <a href="index.html" target="_blank" class="btn-view-site">🌐 View Site</a>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ===== DASHBOARD PANEL ===== -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid" id="dash-stats">
+        <div class="stat-card"><div class="stat-icon gold">🛎️</div><div><div class="stat-num" id="s-services">—</div><div class="stat-label">Services</div></div></div>
+        <div class="stat-card"><div class="stat-icon sienna">🖼️</div><div><div class="stat-num" id="s-portfolio">—</div><div class="stat-label">Projects</div></div></div>
+        <div class="stat-card"><div class="stat-icon sage">✍️</div><div><div class="stat-num" id="s-blog">—</div><div class="stat-label">Articles</div></div></div>
+        <div class="stat-card"><div class="stat-icon espresso">📩</div><div><div class="stat-num" id="s-inquiries">—</div><div class="stat-label">Inquiries</div></div></div>
+      </div>
+      <div class="content-grid">
+        <div class="content-card">
+          <div class="content-card-header"><h3>Recent Inquiries</h3><button class="btn-admin secondary sm" onclick="switchPanel('inquiries')">View All</button></div>
+          <div class="content-card-body" id="dash-recent-inquiries"><div class="skeleton" style="height:200px;border-radius:8px;"></div></div>
+        </div>
+        <div class="content-card">
+          <div class="content-card-header"><h3>Activity Log</h3></div>
+          <div class="content-card-body" id="activity-feed"><div style="color:var(--muted);font-size:.85rem;">No activity yet this session.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SERVICES PANEL ===== -->
+    <div class="panel" id="panel-services">
+      <div class="panel-header">
+        <div><h2>Services &amp; Pricing</h2><p>Manage services shown on the website. Changes go live instantly.</p></div>
+        <button class="btn-admin primary" onclick="openServiceModal()">+ Add Service</button>
+      </div>
+      <div class="content-card">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Image</th><th>Title</th><th>Price</th><th>Duration</th><th>Featured</th><th>Actions</th></tr></thead>
+            <tbody id="services-tbody"><tr><td colspan="6"><div class="skeleton" style="height:120px;border-radius:6px;"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PORTFOLIO PANEL ===== -->
+    <div class="panel" id="panel-portfolio">
+      <div class="panel-header">
+        <div><h2>Portfolio</h2><p>Add and manage projects shown in the gallery.</p></div>
+        <button class="btn-admin primary" onclick="openPortfolioModal()">+ Add Project</button>
+      </div>
+      <div class="content-card">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Year</th><th>Location</th><th>Featured</th><th>Actions</th></tr></thead>
+            <tbody id="portfolio-tbody"><tr><td colspan="7"><div class="skeleton" style="height:120px;border-radius:6px;"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BLOG PANEL ===== -->
+    <div class="panel" id="panel-blog">
+      <div class="panel-header">
+        <div><h2>Blog Articles</h2><p>Write, edit and publish interior design articles.</p></div>
+        <button class="btn-admin primary" onclick="openBlogModal()">+ New Article</button>
+      </div>
+      <div class="content-card">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Title</th><th>Author</th><th>Date</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="blog-tbody"><tr><td colspan="6"><div class="skeleton" style="height:120px;border-radius:6px;"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TESTIMONIALS PANEL ===== -->
+    <div class="panel" id="panel-testimonials">
+      <div class="panel-header">
+        <div><h2>Testimonials</h2><p>Client reviews displayed on the homepage.</p></div>
+        <button class="btn-admin primary" onclick="openTestimonialModal()">+ Add Testimonial</button>
+      </div>
+      <div class="content-card">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Quote (excerpt)</th><th>Rating</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="testimonials-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TEAM PANEL ===== -->
+    <div class="panel" id="panel-team">
+      <div class="panel-header">
+        <div><h2>Team Members</h2><p>Shown on the About page.</p></div>
+        <button class="btn-admin primary" onclick="openTeamModal()">+ Add Member</button>
+      </div>
+      <div class="content-card">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Photo</th><th>Name</th><th>Role</th><th>Order</th><th>Actions</th></tr></thead>
+            <tbody id="team-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== INQUIRIES PANEL ===== -->
+    <div class="panel" id="panel-inquiries">
+      <div class="panel-header">
+        <div><h2>Client Inquiries</h2><p>All contact form and consultation requests.</p></div>
+        <div style="display:flex;gap:.5rem;">
+          <button class="btn-admin secondary sm inq-filter active" data-filter="all">All</button>
+          <button class="btn-admin secondary sm inq-filter" data-filter="new">New</button>
+          <button class="btn-admin secondary sm inq-filter" data-filter="replied">Replied</button>
+          <button class="btn-admin secondary sm inq-filter" data-filter="closed">Closed</button>
+        </div>
+      </div>
+      <div id="inquiries-list"></div>
+    </div>
+
+    <!-- ===== SETTINGS PANEL ===== -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-header"><h2>Site Settings</h2><p>Changes save to Firestore instantly and are reflected on the live website.</p></div>
+      <form id="settings-form">
+        <div class="settings-section">
+          <h3>Contact Information</h3>
+          <div class="admin-form-row">
+            <div class="form-group"><label class="form-label">Phone Number</label><input name="phone" class="form-input" placeholder="+254 796 975 533"></div>
+            <div class="form-group"><label class="form-label">WhatsApp Number (digits only)</label><input name="whatsapp" class="form-input" placeholder="254796975533"></div>
+          </div>
+          <div class="admin-form-row">
+            <div class="form-group"><label class="form-label">Email Address</label><input name="email" type="email" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Studio Address</label><input name="address" class="form-input" placeholder="Design Studio, Nairobi, Kenya"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Business Hours</h3>
+          <div class="admin-form-row">
+            <div class="form-group"><label class="form-label">Monday – Friday</label><input name="hours_monFri" class="form-input" placeholder="8:00 AM – 6:00 PM"></div>
+            <div class="form-group"><label class="form-label">Saturday</label><input name="hours_saturday" class="form-input" placeholder="9:00 AM – 4:00 PM"></div>
+            <div class="form-group"><label class="form-label">Sunday</label><input name="hours_sunday" class="form-input" placeholder="By Appointment"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Social Media Links</h3>
+          <div class="admin-form-row">
+            <div class="form-group"><label class="form-label">Instagram URL</label><input name="instagram" type="url" class="form-input"></div>
+            <div class="form-group"><label class="form-label">TikTok URL</label><input name="tiktok" type="url" class="form-input"></div>
+          </div>
+          <div class="admin-form-row">
+            <div class="form-group"><label class="form-label">Facebook URL</label><input name="facebook" type="url" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Pinterest URL</label><input name="pinterest" type="url" class="form-input"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn-admin primary">💾 Save All Settings</button>
+      </form>
+    </div>
+
+    <!-- ===== SECURITY PANEL ===== -->
+    <div class="panel" id="panel-security">
+      <div class="panel-header"><h2>Security</h2><p>Manage your admin account credentials.</p></div>
+      <div class="settings-section" style="max-width:520px;">
+        <h3>Change Password</h3>
+        <form id="password-form">
+          <div class="form-group"><label class="form-label">Current Password</label><input type="password" name="current" class="form-input" required></div>
+          <div class="form-group"><label class="form-label">New Password</label><input type="password" name="new" class="form-input" minlength="8" required></div>
+          <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" name="confirm" class="form-input" required></div>
+          <button type="submit" class="btn-admin primary">Update Password</button>
+        </form>
+      </div>
+      <div class="settings-section" style="max-width:520px;margin-top:1.5rem;">
+        <h3>Danger Zone</h3>
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem;">Reseed the database with default content. This <strong>adds</strong> default items but does not delete existing content.</p>
+        <button class="btn-admin danger" onclick="confirmReseed()">🔄 Reseed Default Content</button>
+      </div>
+    </div>
+
+  </div><!-- /admin-content -->
+</main>
+
+<!-- ====================== MODAL ====================== -->
+<div class="admin-modal-overlay" id="admin-modal">
+  <div class="admin-modal" id="admin-modal-box">
+    <div class="admin-modal-header">
+      <h3 id="modal-title">Modal</h3>
+      <button class="admin-modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="admin-modal-footer">
+      <button class="btn-admin secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-admin primary" id="modal-save-btn" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="admin-modal-overlay" id="confirm-overlay">
+  <div class="admin-modal confirm-dialog" style="max-width:420px;text-align:center;">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-msg" style="margin:.75rem 0 1.5rem;color:var(--muted);font-size:.9rem;"></p>
+    <div class="confirm-actions">
+      <button class="btn-admin secondary" onclick="document.getElementById('confirm-overlay').classList.remove('open')">Cancel</button>
+      <button class="btn-admin danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-toast" id="admin-toast"></div>
+
+<!-- Firebase + DB -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+
+<script>
+/* ============================================================
+   NAMU SPACES — Admin Dashboard Script
+   All DB operations use async/await with Firestore.
+   Auth: Firebase Authentication (email + password).
+============================================================ */
+'use strict';
+
+/* =================== AUTH GUARD =================== */
+_auth.onAuthStateChanged(user => {
+  if (!user) { window.location.replace('ns-admin-login.html'); return; }
+  document.getElementById('user-name').textContent  = user.email.split('@')[0];
+  document.getElementById('user-avatar').textContent = user.email[0].toUpperCase();
+  init();
+});
+
+/* =================== INIT =================== */
+async function init() {
+  await renderDashboard();
+  refreshUnreadBadge();
+}
+
+/* =================== TOAST =================== */
+function toast(msg, type = 'success') {
+  const el = document.getElementById('admin-toast');
+  el.textContent = msg;
+  el.className = `admin-toast show ${type}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* =================== SIDEBAR =================== */
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+const panels = {
+  dashboard:    { title: 'Dashboard',              sub: "Welcome back — here's what's happening" },
+  services:     { title: 'Services & Pricing',     sub: 'Manage all services shown on the website' },
+  portfolio:    { title: 'Portfolio',              sub: 'Manage your project gallery' },
+  blog:         { title: 'Blog Articles',          sub: 'Write, edit and publish articles' },
+  testimonials: { title: 'Testimonials',           sub: 'Manage client reviews' },
+  team:         { title: 'Team Members',           sub: 'Manage team profiles on the About page' },
+  inquiries:    { title: 'Client Inquiries',       sub: 'View and manage all client messages' },
+  settings:     { title: 'Site Settings',          sub: 'Update contact info, social links, hours' },
+  security:     { title: 'Security',               sub: 'Manage admin credentials' }
+};
+
+function switchPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`panel-${id}`).classList.add('active');
+  document.querySelector(`[data-panel="${id}"]`)?.classList.add('active');
+  document.getElementById('topbar-title').textContent    = panels[id]?.title || id;
+  document.getElementById('topbar-subtitle').textContent = panels[id]?.sub   || '';
+  closeSidebar();
+  renderPanel(id);
+}
+
+document.querySelectorAll('.sidebar-link').forEach(btn =>
+  btn.addEventListener('click', () => switchPanel(btn.dataset.panel))
+);
+
+/* =================== LOGOUT =================== */
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await NamuDB.signOut();
+  window.location.replace('ns-admin-login.html');
+});
+
+/* =================== MODAL =================== */
+let _modalSaveFn = null;
+
+function openModal(title, bodyHtml, saveFn, saveLabel = 'Save') {
+  document.getElementById('modal-title').textContent    = title;
+  document.getElementById('modal-body').innerHTML       = bodyHtml;
+  document.getElementById('modal-save-btn').textContent = saveLabel;
+  document.getElementById('admin-modal').classList.add('open');
+  _modalSaveFn = saveFn;
+}
+
+function closeModal() {
+  document.getElementById('admin-modal').classList.remove('open');
+  _modalSaveFn = null;
+}
+
+async function saveModal() {
+  if (_modalSaveFn) {
+    const btn = document.getElementById('modal-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try { await _modalSaveFn(); }
+    catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Save'; }
+  }
+}
+
+function showConfirm(title, msg, onOk, icon = '⚠️', okLabel = 'Delete') {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  document.getElementById('confirm-icon').textContent  = icon;
+  document.getElementById('confirm-ok-btn').textContent = okLabel;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-ok-btn').onclick = () => {
+    document.getElementById('confirm-overlay').classList.remove('open');
+    onOk();
+  };
+}
+
+/* =================== ACTIVITY LOG =================== */
+const actLog = [];
+function logActivity(text) {
+  actLog.unshift({ text, time: new Date() });
+  const feed = document.getElementById('activity-feed');
+  feed.innerHTML = actLog.slice(0, 15).map(a => `
+    <div class="activity-item">
+      <div class="activity-dot"></div>
+      <div>
+        <div class="activity-text">${a.text}</div>
+        <div class="activity-time">${a.time.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* =================== HELPERS =================== */
+function fv(form, name) {
+  const el = form.querySelector(`[name="${name}"]`);
+  return el ? el.value.trim() : '';
+}
+function formToObj(form) {
+  const obj = {};
+  new FormData(form).forEach((v, k) => { obj[k] = v; });
+  return obj;
+}
+function checkboxVal(form, name) { return !!form.querySelector(`[name="${name}"]`)?.checked; }
+
+async function refreshUnreadBadge() {
+  const count = await NamuDB.getUnreadCount();
+  const badge = document.getElementById('inquiries-badge');
+  if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+  else badge.style.display = 'none';
+}
+
+/* =================== DASHBOARD =================== */
+async function renderDashboard() {
+  try {
+    const [svcs, port, blog, inqs] = await Promise.all([
+      NamuDB.getServices(), NamuDB.getFeaturedPortfolio(), NamuDB.getBlogPosts(false), NamuDB.getInquiries()
+    ]);
+    document.getElementById('s-services').textContent  = svcs.length;
+    document.getElementById('s-portfolio').textContent = port.length;
+    document.getElementById('s-blog').textContent      = blog.length;
+    document.getElementById('s-inquiries').textContent = inqs.length;
+
+    const recent = inqs.slice(0, 5);
+    const rEl = document.getElementById('dash-recent-inquiries');
+    if (!recent.length) { rEl.innerHTML = '<div class="admin-empty"><div class="empty-icon">📭</div><p>No inquiries yet.</p></div>'; return; }
+    rEl.innerHTML = recent.map(i => `
+      <div class="inquiry-card ${i.read ? 'read' : 'unread'}" onclick="switchPanel('inquiries')">
+        <div class="inquiry-meta">
+          <span class="inquiry-name">${i.name || 'Anonymous'}</span>
+          <span class="badge badge-${i.status || 'new'}">${i.status || 'new'}</span>
+          <span class="inquiry-date">${NamuDB.formatDateTime(i.createdAt)}</span>
+        </div>
+        <div class="inquiry-excerpt">${(i.message || i.service || '(No message)').substring(0,100)}</div>
+      </div>`).join('');
+    logActivity(`Dashboard loaded — ${inqs.filter(i=>!i.read).length} unread inquiries`);
+  } catch(e) { console.error('[dashboard]',e); }
+}
+
+/* =================== SERVICES =================== */
+async function renderServices() {
+  const tbody = document.getElementById('services-tbody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="skeleton" style="height:100px;border-radius:6px;"></div></td></tr>';
+  try {
+    const items = await NamuDB.getServices();
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><p>No services yet.</p></div></td></tr>'; return; }
+    tbody.innerHTML = items.map(s => `
+      <tr>
+        <td><img src="${s.image}" class="table-img" alt="" onerror="this.src='https://picsum.photos/seed/svc/80/60'"></td>
+        <td><strong>${s.title}</strong></td>
+        <td><strong>${s.price}</strong></td>
+        <td>${s.duration}</td>
+        <td>${s.featured ? '<span class="badge badge-featured">Featured</span>' : '—'}</td>
+        <td><div class="actions-cell">
+          <button class="action-btn edit" onclick="editService('${s.id}')">Edit</button>
+          <button class="action-btn delete" onclick="confirmDeleteService('${s.id}','${s.title.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6">${e.message}</td></tr>`; }
+}
+
+function serviceForm(s = {}) {
+  return `<div class="admin-form-grid">
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Title *</label><input name="title" class="form-input" value="${s.title||''}" required></div>
+      <div class="form-group"><label class="form-label">Price *</label><input name="price" class="form-input" value="${s.price||''}" placeholder="From KES 15,000" required></div>
+    </div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Duration</label><input name="duration" class="form-input" value="${s.duration||''}"></div>
+      <div class="form-group"><label class="form-label">Icon (emoji)</label><input name="icon" class="form-input" value="${s.icon||'🏡'}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Short Excerpt</label><input name="excerpt" class="form-input" value="${s.excerpt||''}"></div>
+    <div class="form-group"><label class="form-label">Full Description</label><textarea name="description" class="form-textarea">${s.description||''}</textarea></div>
+    <div class="form-group"><label class="form-label">Image URL</label><input name="image" class="form-input" value="${s.image||''}"></div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Display Order</label><input name="order" type="number" class="form-input" value="${s.order||1}"></div>
+      <div class="form-group" style="justify-content:flex-end;padding-top:1.8rem;">
+        <div class="toggle-wrap">
+          <label class="toggle-switch"><input type="checkbox" name="featured" ${s.featured?'checked':''}><span class="toggle-slider"></span></label>
+          <span class="toggle-label">Featured on homepage</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openServiceModal() {
+  openModal('Add New Service', serviceForm(), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const data = { title: el('title').value.trim(), price: el('price').value.trim(), duration: el('duration').value.trim(), icon: el('icon').value.trim(), excerpt: el('excerpt').value.trim(), description: el('description').value.trim(), image: el('image').value.trim(), order: parseInt(el('order').value||1), featured: el('featured').checked };
+    if (!data.title || !data.price) { toast('Title and Price are required.','error'); return; }
+    await NamuDB.addService(data);
+    toast('Service added!');
+    closeModal();
+    renderServices();
+    logActivity(`Added service: ${data.title}`);
+  });
+}
+
+async function editService(id) {
+  const snap = await _db.collection('services').doc(id).get();
+  const s    = { id, ...snap.data() };
+  openModal('Edit Service', serviceForm(s), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const data = { title: el('title').value.trim(), price: el('price').value.trim(), duration: el('duration').value.trim(), icon: el('icon').value.trim(), excerpt: el('excerpt').value.trim(), description: el('description').value.trim(), image: el('image').value.trim(), order: parseInt(el('order').value||1), featured: el('featured').checked };
+    await NamuDB.updateService(id, data);
+    toast('Service updated!');
+    closeModal();
+    renderServices();
+    logActivity(`Updated service: ${data.title}`);
+  }, 'Save Changes');
+}
+
+function confirmDeleteService(id, title) {
+  showConfirm('Delete Service?', `"${title}" will be permanently removed from the website.`, async () => {
+    await NamuDB.deleteService(id);
+    toast('Service deleted.', 'info');
+    renderServices();
+    logActivity(`Deleted service: ${title}`);
+  });
+}
+
+/* =================== PORTFOLIO =================== */
+async function renderPortfolioAdmin() {
+  const tbody = document.getElementById('portfolio-tbody');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="skeleton" style="height:100px;border-radius:6px;"></div></td></tr>';
+  try {
+    const items = await NamuDB.getPortfolio('all');
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><p>No projects yet.</p></div></td></tr>'; return; }
+    tbody.innerHTML = items.map(p => `
+      <tr>
+        <td><img src="${p.image}" class="table-img" alt="" onerror="this.src='https://picsum.photos/seed/proj/80/60'"></td>
+        <td><strong>${p.title}</strong></td>
+        <td><span class="badge badge-${p.category}">${p.category}</span></td>
+        <td>${p.year}</td>
+        <td>${p.location||'—'}</td>
+        <td>${p.featured ? '<span class="badge badge-featured">Yes</span>' : '—'}</td>
+        <td><div class="actions-cell">
+          <button class="action-btn edit" onclick="editPortfolio('${p.id}')">Edit</button>
+          <button class="action-btn delete" onclick="confirmDeletePortfolio('${p.id}','${p.title.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="7">${e.message}</td></tr>`; }
+}
+
+function portfolioForm(p = {}) {
+  return `<div class="admin-form-grid">
+    <div class="form-group"><label class="form-label">Title *</label><input name="title" class="form-input" value="${p.title||''}" required></div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Category</label>
+        <select name="category" class="form-select">
+          <option value="residential" ${p.category==='residential'?'selected':''}>Residential</option>
+          <option value="commercial"  ${p.category==='commercial'?'selected':''}>Commercial</option>
+          <option value="office"      ${p.category==='office'?'selected':''}>Office</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Year</label><input name="year" type="number" class="form-input" value="${p.year||new Date().getFullYear()}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Location</label><input name="location" class="form-input" value="${p.location||''}"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-textarea">${p.description||''}</textarea></div>
+    <div class="form-group"><label class="form-label">Image URL</label><input name="image" class="form-input" value="${p.image||''}"></div>
+    <div class="toggle-wrap" style="padding:.25rem 0;">
+      <label class="toggle-switch"><input type="checkbox" name="featured" ${p.featured?'checked':''}><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Featured on homepage</span>
+    </div>
+  </div>`;
+}
+
+function openPortfolioModal() {
+  openModal('Add New Project', portfolioForm(), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const data = { title: el('title').value.trim(), category: el('category').value, year: parseInt(el('year').value), location: el('location').value.trim(), description: el('description').value.trim(), image: el('image').value.trim(), featured: el('featured').checked };
+    if (!data.title) { toast('Title is required.','error'); return; }
+    await NamuDB.addPortfolioItem(data);
+    toast('Project added!');
+    closeModal();
+    renderPortfolioAdmin();
+    logActivity(`Added project: ${data.title}`);
+  });
+}
+
+async function editPortfolio(id) {
+  const snap = await _db.collection('portfolio').doc(id).get();
+  const p = { id, ...snap.data() };
+  openModal('Edit Project', portfolioForm(p), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const data = { title: el('title').value.trim(), category: el('category').value, year: parseInt(el('year').value), location: el('location').value.trim(), description: el('description').value.trim(), image: el('image').value.trim(), featured: el('featured').checked };
+    await NamuDB.updatePortfolioItem(id, data);
+    toast('Project updated!');
+    closeModal();
+    renderPortfolioAdmin();
+    logActivity(`Updated project: ${data.title}`);
+  }, 'Save Changes');
+}
+
+function confirmDeletePortfolio(id, title) {
+  showConfirm('Delete Project?', `"${title}" will be permanently removed.`, async () => {
+    await NamuDB.deletePortfolioItem(id);
+    toast('Project deleted.','info');
+    renderPortfolioAdmin();
+    logActivity(`Deleted project: ${title}`);
+  });
+}
+
+/* =================== BLOG =================== */
+async function renderBlogAdmin() {
+  const tbody = document.getElementById('blog-tbody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="skeleton" style="height:100px;border-radius:6px;"></div></td></tr>';
+  try {
+    const posts = await NamuDB.getBlogPosts(false);
+    if (!posts.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><p>No articles yet.</p></div></td></tr>'; return; }
+    tbody.innerHTML = posts.map(p => `
+      <tr>
+        <td><strong>${p.title}</strong></td>
+        <td>${p.author||'—'}</td>
+        <td>${NamuDB.formatDate(p.date)}</td>
+        <td>${p.category}</td>
+        <td><span class="badge badge-${p.published?'published':'draft'}">${p.published?'Published':'Draft'}</span></td>
+        <td><div class="actions-cell">
+          <button class="action-btn edit" onclick="editBlog('${p.id}')">Edit</button>
+          <button class="action-btn ${p.published?'view':'publish'}" onclick="togglePublish('${p.id}',${p.published})">${p.published?'Unpublish':'Publish'}</button>
+          <button class="action-btn delete" onclick="confirmDeleteBlog('${p.id}','${p.title.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6">${e.message}</td></tr>`; }
+}
+
+function blogForm(p = {}) {
+  return `<div class="admin-form-grid">
+    <div class="form-group"><label class="form-label">Title *</label><input name="title" class="form-input" value="${(p.title||'').replace(/"/g,'&quot;')}" required></div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Author</label><input name="author" class="form-input" value="${p.author||'Medina Wabomba'}"></div>
+      <div class="form-group"><label class="form-label">Date</label><input name="date" type="date" class="form-input" value="${p.date||new Date().toISOString().split('T')[0]}"></div>
+    </div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Category</label>
+        <select name="category" class="form-select">
+          <option ${p.category==='Design Tips'?'selected':''}>Design Tips</option>
+          <option ${p.category==='Design Trends'?'selected':''}>Design Trends</option>
+          <option ${p.category==='Behind the Scenes'?'selected':''}>Behind the Scenes</option>
+          <option ${p.category==='Client Stories'?'selected':''}>Client Stories</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Cover Image URL</label><input name="image" class="form-input" value="${p.image||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Excerpt (shown in card)</label><textarea name="excerpt" class="form-textarea" rows="2">${p.excerpt||''}</textarea></div>
+    <div class="form-group"><label class="form-label">Full Content (HTML supported)</label><textarea name="content" class="form-textarea" rows="8">${(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>
+    <div class="toggle-wrap">
+      <label class="toggle-switch"><input type="checkbox" name="published" ${p.published?'checked':''}><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Published (visible on website)</span>
+    </div>
+  </div>`;
+}
+
+function openBlogModal() {
+  openModal('New Blog Article', blogForm(), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const data = { title: el('title').value.trim(), author: el('author').value.trim(), date: el('date').value, category: el('category').value, image: el('image').value.trim(), excerpt: el('excerpt').value.trim(), content: el('content').value, published: el('published').checked };
+    if (!data.title) { toast('Title required.','error'); return; }
+    await NamuDB.addBlogPost(data);
+    toast('Article created!');
+    closeModal();
+    renderBlogAdmin();
+    logActivity(`Created article: ${data.title}`);
+  });
+}
+
+async function editBlog(id) {
+  const snap = await _db.collection('blog').doc(id).get();
+  const p = { id, ...snap.data() };
+  openModal('Edit Article', blogForm(p), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el   = n => form.querySelector(`[name="${n}"]`);
+    const content = el('content').value.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+    const data = { title: el('title').value.trim(), author: el('author').value.trim(), date: el('date').value, category: el('category').value, image: el('image').value.trim(), excerpt: el('excerpt').value.trim(), content, published: el('published').checked };
+    await NamuDB.updateBlogPost(id, data);
+    toast('Article updated!');
+    closeModal();
+    renderBlogAdmin();
+    logActivity(`Updated article: ${data.title}`);
+  }, 'Save Changes');
+}
+
+async function togglePublish(id, currentlyPublished) {
+  await NamuDB.updateBlogPost(id, { published: !currentlyPublished });
+  toast(currentlyPublished ? 'Article unpublished.' : 'Article published!');
+  renderBlogAdmin();
+}
+
+function confirmDeleteBlog(id, title) {
+  showConfirm('Delete Article?', `"${title}" will be permanently deleted.`, async () => {
+    await NamuDB.deleteBlogPost(id);
+    toast('Article deleted.','info');
+    renderBlogAdmin();
+    logActivity(`Deleted article: ${title}`);
+  });
+}
+
+/* =================== TESTIMONIALS =================== */
+async function renderTestimonialsAdmin() {
+  const tbody = document.getElementById('testimonials-tbody');
+  try {
+    const items = await NamuDB.getTestimonials(false);
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><p>No testimonials yet.</p></div></td></tr>'; return; }
+    tbody.innerHTML = items.map(t => `
+      <tr>
+        <td><strong>${t.name}</strong></td>
+        <td>${t.role}</td>
+        <td>${(t.quote||'').substring(0,60)}…</td>
+        <td>${'★'.repeat(t.rating||5)}</td>
+        <td>${t.active ? '<span class="badge badge-published">Active</span>' : '<span class="badge badge-draft">Hidden</span>'}</td>
+        <td><div class="actions-cell">
+          <button class="action-btn edit" onclick="editTestimonial('${t.id}')">Edit</button>
+          <button class="action-btn delete" onclick="confirmDeleteTestimonial('${t.id}','${t.name.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6">${e.message}</td></tr>`; }
+}
+
+function testimonialForm(t = {}) {
+  return `<div class="admin-form-grid">
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Client Name *</label><input name="name" class="form-input" value="${t.name||''}" required></div>
+      <div class="form-group"><label class="form-label">Role / Location</label><input name="role" class="form-input" value="${t.role||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Quote *</label><textarea name="quote" class="form-textarea" rows="3" required>${t.quote||''}</textarea></div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Photo URL</label><input name="image" class="form-input" value="${t.image||''}"></div>
+      <div class="form-group"><label class="form-label">Rating (1-5)</label><input name="rating" type="number" min="1" max="5" class="form-input" value="${t.rating||5}"></div>
+    </div>
+    <div class="toggle-wrap">
+      <label class="toggle-switch"><input type="checkbox" name="active" ${t.active!==false?'checked':''}><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Show on website</span>
+    </div>
+  </div>`;
+}
+
+function openTestimonialModal() {
+  openModal('Add Testimonial', testimonialForm(), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el = n => form.querySelector(`[name="${n}"]`);
+    const data = { name: el('name').value.trim(), role: el('role').value.trim(), quote: el('quote').value.trim(), image: el('image').value.trim(), rating: parseInt(el('rating').value||5), active: el('active').checked };
+    if (!data.name || !data.quote) { toast('Name and Quote required.','error'); return; }
+    await NamuDB.addTestimonial(data);
+    toast('Testimonial added!');
+    closeModal();
+    renderTestimonialsAdmin();
+    logActivity(`Added testimonial from: ${data.name}`);
+  });
+}
+
+async function editTestimonial(id) {
+  const snap = await _db.collection('testimonials').doc(id).get();
+  const t = { id, ...snap.data() };
+  openModal('Edit Testimonial', testimonialForm(t), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el = n => form.querySelector(`[name="${n}"]`);
+    const data = { name: el('name').value.trim(), role: el('role').value.trim(), quote: el('quote').value.trim(), image: el('image').value.trim(), rating: parseInt(el('rating').value||5), active: el('active').checked };
+    await NamuDB.updateTestimonial(id, data);
+    toast('Testimonial updated!');
+    closeModal();
+    renderTestimonialsAdmin();
+  }, 'Save Changes');
+}
+
+function confirmDeleteTestimonial(id, name) {
+  showConfirm('Delete Testimonial?', `"${name}"'s review will be removed.`, async () => {
+    await NamuDB.deleteTestimonial(id);
+    toast('Testimonial deleted.','info');
+    renderTestimonialsAdmin();
+    logActivity(`Deleted testimonial: ${name}`);
+  });
+}
+
+/* =================== TEAM =================== */
+async function renderTeamAdmin() {
+  const tbody = document.getElementById('team-tbody');
+  try {
+    const items = await NamuDB.getTeam();
+    if (!items.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="admin-empty"><p>No team members yet.</p></div></td></tr>'; return; }
+    tbody.innerHTML = items.map(m => `
+      <tr>
+        <td><img src="${m.image}" class="table-img" style="border-radius:50%;" alt="" onerror="this.src='https://picsum.photos/seed/team/52/42'"></td>
+        <td><strong>${m.name}</strong></td>
+        <td>${m.role}</td>
+        <td>${m.order}</td>
+        <td><div class="actions-cell">
+          <button class="action-btn edit" onclick="editTeamMember('${m.id}')">Edit</button>
+          <button class="action-btn delete" onclick="confirmDeleteTeam('${m.id}','${m.name.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5">${e.message}</td></tr>`; }
+}
+
+function teamForm(m = {}) {
+  return `<div class="admin-form-grid">
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Full Name *</label><input name="name" class="form-input" value="${m.name||''}" required></div>
+      <div class="form-group"><label class="form-label">Role / Title</label><input name="role" class="form-input" value="${m.role||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Bio</label><textarea name="bio" class="form-textarea" rows="3">${m.bio||''}</textarea></div>
+    <div class="admin-form-row">
+      <div class="form-group"><label class="form-label">Photo URL</label><input name="image" class="form-input" value="${m.image||''}"></div>
+      <div class="form-group"><label class="form-label">Display Order</label><input name="order" type="number" class="form-input" value="${m.order||1}"></div>
+    </div>
+  </div>`;
+}
+
+function openTeamModal() {
+  openModal('Add Team Member', teamForm(), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el = n => form.querySelector(`[name="${n}"]`);
+    const data = { name: el('name').value.trim(), role: el('role').value.trim(), bio: el('bio').value.trim(), image: el('image').value.trim(), order: parseInt(el('order').value||1) };
+    if (!data.name) { toast('Name required.','error'); return; }
+    await NamuDB.addTeamMember(data);
+    toast('Team member added!');
+    closeModal();
+    renderTeamAdmin();
+    logActivity(`Added team member: ${data.name}`);
+  });
+}
+
+async function editTeamMember(id) {
+  const snap = await _db.collection('team').doc(id).get();
+  const m = { id, ...snap.data() };
+  openModal('Edit Team Member', teamForm(m), async () => {
+    const form = document.querySelector('#admin-modal .admin-form-grid');
+    const el = n => form.querySelector(`[name="${n}"]`);
+    const data = { name: el('name').value.trim(), role: el('role').value.trim(), bio: el('bio').value.trim(), image: el('image').value.trim(), order: parseInt(el('order').value||1) };
+    await NamuDB.updateTeamMember(id, data);
+    toast('Team member updated!');
+    closeModal();
+    renderTeamAdmin();
+    logActivity(`Updated team member: ${data.name}`);
+  }, 'Save Changes');
+}
+
+function confirmDeleteTeam(id, name) {
+  showConfirm('Remove Team Member?', `"${name}" will be removed from the About page.`, async () => {
+    await NamuDB.deleteTeamMember(id);
+    toast('Team member removed.','info');
+    renderTeamAdmin();
+    logActivity(`Removed team member: ${name}`);
+  });
+}
+
+/* =================== INQUIRIES =================== */
+let _inqFilter = 'all';
+async function renderInquiries(filter = 'all') {
+  _inqFilter = filter;
+  document.querySelectorAll('.inq-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  const list = document.getElementById('inquiries-list');
+  list.innerHTML = '<div class="skeleton" style="height:150px;border-radius:12px;margin-bottom:1rem;"></div>'.repeat(3);
+  try {
+    const all = await NamuDB.getInquiries();
+    const items = filter === 'all' ? all : all.filter(i => i.status === filter);
+    if (!items.length) { list.innerHTML = '<div class="admin-empty"><div class="empty-icon">📭</div><p>No inquiries in this category.</p></div>'; refreshUnreadBadge(); return; }
+    list.innerHTML = items.map(i => `
+      <div class="inquiry-card ${i.read?'read':'unread'}">
+        <div class="inquiry-meta">
+          <span class="inquiry-name">${i.name||'Anonymous'}</span>
+          <span class="badge badge-${i.status||'new'}">${i.status||'new'}</span>
+          ${i.type ? `<span class="badge badge-featured">${i.type}</span>` : ''}
+          <span class="inquiry-date">${NamuDB.formatDateTime(i.createdAt)}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 2rem;margin:.75rem 0;font-size:.85rem;">
+          ${i.phone ? `<div><strong>📞</strong> <a href="tel:${i.phone}">${i.phone}</a></div>` : ''}
+          ${i.email ? `<div><strong>✉️</strong> <a href="mailto:${i.email}">${i.email}</a></div>` : ''}
+          ${i.service ? `<div><strong>🛎️</strong> ${i.service}</div>` : ''}
+        </div>
+        ${i.message ? `<div class="inquiry-excerpt" style="margin:.5rem 0;">${i.message}</div>` : ''}
+        <div class="actions-cell" style="margin-top:.75rem;">
+          ${i.phone ? `<a href="tel:${i.phone}" class="action-btn view">📞 Call</a>` : ''}
+          ${i.email ? `<a href="mailto:${i.email}" class="action-btn view">✉️ Email</a>` : ''}
+          <button class="action-btn edit" onclick="updateInquiryStatus('${i.id}','replied')">✓ Mark Replied</button>
+          <button class="action-btn view" onclick="updateInquiryStatus('${i.id}','closed')">Archive</button>
+          <button class="action-btn delete" onclick="confirmDeleteInquiry('${i.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+    items.filter(i => !i.read).forEach(i => NamuDB.markInquiryRead(i.id));
+    refreshUnreadBadge();
+  } catch(e) { list.innerHTML = `<div class="admin-empty"><p>${e.message}</p></div>`; }
+}
+
+async function updateInquiryStatus(id, status) {
+  await NamuDB.updateInquiryStatus(id, status);
+  toast(`Marked as ${status}.`);
+  renderInquiries(_inqFilter);
+  logActivity(`Inquiry marked: ${status}`);
+}
+
+function confirmDeleteInquiry(id) {
+  showConfirm('Delete Inquiry?', 'This inquiry will be permanently deleted.', async () => {
+    await NamuDB.deleteInquiry(id);
+    toast('Inquiry deleted.','info');
+    renderInquiries(_inqFilter);
+    refreshUnreadBadge();
+  });
+}
+
+document.querySelectorAll('.inq-filter').forEach(btn =>
+  btn.addEventListener('click', () => renderInquiries(btn.dataset.filter))
+);
+
+/* =================== SETTINGS =================== */
+async function populateSettings() {
+  try {
+    const s = await NamuDB.getSettings();
+    const form = document.getElementById('settings-form');
+    const set  = (name, val) => { const el = form.querySelector(`[name="${name}"]`); if (el) el.value = val || ''; };
+    set('phone', s.phone); set('whatsapp', s.whatsapp); set('email', s.email); set('address', s.address);
+    set('instagram', s.instagram); set('tiktok', s.tiktok); set('facebook', s.facebook); set('pinterest', s.pinterest);
+    if (s.businessHours) { set('hours_monFri', s.businessHours.monFri); set('hours_saturday', s.businessHours.saturday); set('hours_sunday', s.businessHours.sunday); }
+  } catch(e) { toast('Could not load settings.','error'); }
+}
+
+document.getElementById('settings-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const form = e.target;
+    const gv = n => form.querySelector(`[name="${n}"]`)?.value.trim() || '';
+    const updates = { phone: gv('phone'), whatsapp: gv('whatsapp'), email: gv('email'), address: gv('address'), instagram: gv('instagram'), tiktok: gv('tiktok'), facebook: gv('facebook'), pinterest: gv('pinterest'), businessHours: { monFri: gv('hours_monFri'), saturday: gv('hours_saturday'), sunday: gv('hours_sunday') } };
+    await NamuDB.updateSettings(updates);
+    toast('Settings saved! Live on website immediately.');
+    logActivity('Site settings updated');
+  } catch(e) { toast(e.message,'error'); }
+  finally { btn.disabled = false; btn.textContent = '💾 Save All Settings'; }
+});
+
+/* =================== SECURITY =================== */
+document.getElementById('password-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  try {
+    const form = e.target;
+    const curr = form.querySelector('[name="current"]').value;
+    const nw   = form.querySelector('[name="new"]').value;
+    const conf = form.querySelector('[name="confirm"]').value;
+    if (nw !== conf) { toast('New passwords do not match.','error'); return; }
+    if (nw.length < 8) { toast('Password must be at least 8 characters.','error'); return; }
+    await NamuDB.updateAdminPassword(curr, nw);
+    toast('Password updated successfully!');
+    form.reset();
+    logActivity('Admin password changed');
+  } catch(err) {
+    const msg = err.code === 'auth/wrong-password' ? 'Current password is incorrect.' : err.message;
+    toast(msg,'error');
+  } finally { btn.disabled = false; btn.textContent = 'Update Password'; }
+});
+
+function confirmReseed() {
+  showConfirm('Reseed Default Content?', 'This will ADD the default services, portfolio items, blog posts, and team members alongside any existing content. It will not delete anything.', async () => {
+    toast('Reseeding…');
+    try {
+      await NamuDB.seedDefaultData(msg => console.log('[Reseed]', msg));
+      toast('Default content added!');
+      logActivity('Database reseeded with defaults');
+    } catch(e) { toast(e.message,'error'); }
+  }, 'ℹ️', 'Yes, Add Defaults');
+}
+
+/* =================== PANEL ROUTER =================== */
+function renderPanel(id) {
+  const map = {
+    dashboard:    renderDashboard,
+    services:     renderServices,
+    portfolio:    renderPortfolioAdmin,
+    blog:         renderBlogAdmin,
+    testimonials: renderTestimonialsAdmin,
+    team:         renderTeamAdmin,
+    inquiries:    () => renderInquiries(_inqFilter),
+    settings:     populateSettings,
+    security:     () => {}
+  };
+  map[id]?.();
+}
+
+</script>
+</body>
+</html>

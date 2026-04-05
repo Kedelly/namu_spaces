@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>Namu Spaces — Secure Access</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--espresso);font-family:var(--font-body);position:relative;overflow:hidden;}
+    body::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(140,94,60,.25) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(192,154,94,.15) 0%,transparent 50%);pointer-events:none}
+    .login-wrap{width:100%;max-width:440px;padding:2rem;position:relative;z-index:1}
+    .login-card{background:rgba(250,250,245,.04);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);border-radius:20px;padding:3rem 2.5rem;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+    .login-logo{text-align:center;margin-bottom:2.5rem}
+    .login-logo img{width:72px;height:72px;border-radius:14px;object-fit:cover;margin:0 auto .75rem;display:block}
+    .logo-text{font-family:var(--font-display);font-size:2rem;font-weight:300;color:var(--cream);letter-spacing:.05em;display:block}
+    .logo-text span{color:var(--gold)}
+    .logo-sub{font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(250,250,245,.35);display:block;margin-top:.4rem}
+    .divider{width:40px;height:1px;background:var(--gold);margin:0 auto 2rem}
+    .login-title{font-family:var(--font-display);font-size:1.5rem;color:var(--cream);text-align:center;margin-bottom:.35rem}
+    .login-sub{font-size:.85rem;color:rgba(250,250,245,.45);text-align:center;margin-bottom:1.8rem}
+    .form-group{margin-bottom:1.2rem}
+    label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(250,250,245,.5);margin-bottom:.5rem}
+    .form-control{width:100%;padding:.9rem 1.1rem;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;color:var(--cream);font-size:.95rem;font-family:var(--font-body);transition:all .3s}
+    .form-control::placeholder{color:rgba(255,255,255,.25)}
+    .form-control:focus{outline:none;border-color:var(--gold);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(192,154,94,.12)}
+    .pw-wrap{position:relative}
+    .pw-toggle{position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:1rem;transition:color .2s}
+    .pw-toggle:hover{color:var(--gold)}
+    .login-btn{width:100%;padding:1rem;background:linear-gradient(135deg,var(--sienna),var(--gold));color:var(--espresso);border:none;border-radius:8px;font-family:var(--font-body);font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .3s;margin-top:.5rem}
+    .login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,154,94,.3)}
+    .login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .login-error{display:none;background:rgba(244,67,54,.12);border:1px solid rgba(244,67,54,.3);color:#ff8a80;padding:.8rem 1rem;border-radius:8px;font-size:.85rem;margin-top:1rem;text-align:center}
+    .login-error.show{display:block}
+    .security-badge{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.5rem;font-size:.72rem;color:rgba(250,250,245,.25)}
+    .back-home{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:2rem;font-size:.78rem;color:rgba(250,250,245,.3);text-decoration:none;transition:color .2s}
+    .back-home:hover{color:rgba(250,250,245,.6)}
+    /* First-time setup */
+    .setup-panel{display:none}
+    .setup-panel.active{display:block}
+    .login-panel.hidden{display:none}
+    .info-box{background:rgba(192,154,94,.1);border:1px solid rgba(192,154,94,.25);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:.82rem;color:rgba(250,250,245,.7);line-height:1.6}
+    .info-box strong{color:var(--gold-light);display:block;margin-bottom:.25rem}
+    .progress-bar{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin:1rem 0}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--sienna),var(--gold));width:0;transition:width .5s ease;border-radius:2px}
+    .progress-text{font-size:.78rem;color:rgba(250,250,245,.5);text-align:center}
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="images/logo.jpg" alt="Namu Spaces">
+        <span class="logo-text">Namu <span>Spaces</span></span>
+        <span class="logo-sub">Studio Administration</span>
+      </div>
+      <div class="divider"></div>
+
+      <!-- ===== NORMAL LOGIN PANEL ===== -->
+      <div id="login-panel" class="login-panel">
+        <h2 class="login-title">Secure Sign In</h2>
+        <p class="login-sub">Admin access only. This page is not publicly accessible.</p>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="admin-email" name="email" class="form-control"
+                   placeholder="admin@namuspaces.com" autocomplete="email" required autofocus>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="admin-password" name="password" class="form-control"
+                     placeholder="Your admin password" autocomplete="current-password" required>
+              <button type="button" class="pw-toggle" id="pw-toggle">👁</button>
+            </div>
+          </div>
+          <button type="submit" class="login-btn" id="login-btn">Sign In to Dashboard</button>
+          <div class="login-error" id="login-error">Incorrect credentials. Please try again.</div>
+        </form>
+        <div class="security-badge">🔒 Secured by Firebase Authentication</div>
+      </div>
+
+      <!-- ===== FIRST-TIME SETUP PANEL ===== -->
+      <div id="setup-panel" class="setup-panel">
+        <h2 class="login-title">First-Time Setup</h2>
+        <p class="login-sub">No admin account exists yet. Create one to get started.</p>
+        <div class="info-box">
+          <strong>What this does:</strong>
+          Creates your admin account and seeds the website with default content (services, portfolio, blog posts, etc.) into Firestore.
+        </div>
+        <form id="setup-form" novalidate>
+          <div class="form-group">
+            <label>Admin Email</label>
+            <input type="email" id="setup-email" name="email" class="form-control"
+                   placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password (min 8 characters)</label>
+            <input type="password" id="setup-password" name="password" class="form-control"
+                   placeholder="Create a strong password" minlength="8" required>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="setup-confirm" name="confirm" class="form-control"
+                   placeholder="Repeat password" required>
+          </div>
+          <button type="submit" class="login-btn" id="setup-btn">Create Account &amp; Seed Data</button>
+          <div class="login-error" id="setup-error"></div>
+        </form>
+        <div id="setup-progress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+          <div class="progress-text" id="prog-text">Initialising…</div>
+        </div>
+      </div>
+    </div>
+    <a href="index.html" class="back-home">← Back to Namu Spaces Website</a>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/db.js"></script>
+  <script>
+  (() => {
+    const loginPanel  = document.getElementById('login-panel');
+    const setupPanel  = document.getElementById('setup-panel');
+    const loginError  = document.getElementById('login-error');
+    const setupError  = document.getElementById('setup-error');
+
+    /* ---- Check Firebase config ---- */
+    if (typeof firebase === 'undefined' || !firebase.apps.length) {
+      loginError.textContent = 'Firebase is not configured. Please fill in js/firebase-config.js first.';
+      loginError.classList.add('show');
+    }
+
+    /* ---- Redirect if already signed in ---- */
+    _auth.onAuthStateChanged(user => {
+      if (user) window.location.replace('ns-admin-dashboard.html');
+    });
+
+    /* ---- Detect first-time setup ---- */
+    (async () => {
+      try {
+        const setup = await NamuDB.needsSetup();
+        if (setup) {
+          loginPanel.classList.add('hidden');
+          setupPanel.classList.add('active');
+        }
+      } catch (e) {
+        // Firebase not configured — show login with error
+        loginError.textContent = 'Cannot connect to Firebase. Check your firebase-config.js.';
+        loginError.classList.add('show');
+      }
+    })();
+
+    /* ---- Password toggle ---- */
+    document.getElementById('pw-toggle').addEventListener('click', () => {
+      const inp = document.getElementById('admin-password');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      document.getElementById('pw-toggle').textContent = show ? '🙈' : '👁';
+    });
+
+    /* ---- Login form ---- */
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn   = document.getElementById('login-btn');
+      const email = document.getElementById('admin-email').value.trim();
+      const pass  = document.getElementById('admin-password').value;
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      loginError.classList.remove('show');
+      try {
+        await NamuDB.signIn(email, pass);
+        btn.textContent = '✓ Access Granted — Redirecting…';
+        btn.style.background = 'linear-gradient(135deg,#4CAF50,#2E7D32)';
+        // Redirect handled by onAuthStateChanged above
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Dashboard';
+        const msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+          ? 'Incorrect email or password. Please try again.'
+          : err.code === 'auth/too-many-requests'
+          ? 'Too many failed attempts. Please wait a few minutes.'
+          : `Sign-in error: ${err.message}`;
+        loginError.textContent = msg;
+        loginError.classList.add('show');
+      }
+    });
+
+    /* ---- First-time setup form ---- */
+    document.getElementById('setup-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn      = document.getElementById('setup-btn');
+      const email    = document.getElementById('setup-email').value.trim();
+      const pass     = document.getElementById('setup-password').value;
+      const confirm  = document.getElementById('setup-confirm').value;
+      const progress = document.getElementById('setup-progress');
+      const fill     = document.getElementById('prog-fill');
+      const text     = document.getElementById('prog-text');
+
+      setupError.classList.remove('show');
+      if (pass !== confirm) { setupError.textContent = 'Passwords do not match.'; setupError.classList.add('show'); return; }
+      if (pass.length < 8)  { setupError.textContent = 'Password must be at least 8 characters.'; setupError.classList.add('show'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Setting up…';
+      progress.style.display = 'block';
+
+      try {
+        // 1. Create Firebase Auth account
+        text.textContent = 'Creating admin account…';
+        fill.style.width = '10%';
+        const cred = await _auth.createUserWithEmailAndPassword(email, pass);
+
+        // 2. Seed Firestore with default content
+        let step = 0;
+        const steps = ['Settings','Services','Portfolio','Blog','Testimonials','Team'];
+        await NamuDB.seedDefaultData(msg => {
+          step++;
+          fill.style.width = `${10 + (step / steps.length) * 85}%`;
+          text.textContent = msg;
+        });
+
+        fill.style.width = '100%';
+        text.textContent = 'Done! Redirecting to dashboard…';
+        setTimeout(() => window.location.replace('ns-admin-dashboard.html'), 1000);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Create Account & Seed Data';
+        progress.style.display = 'none';
+        const msg = err.code === 'auth/email-already-in-use'
+          ? 'That email is already registered. Reload and sign in instead.'
+          : err.code === 'auth/weak-password'
+          ? 'Password too weak. Use at least 8 characters with mixed case and numbers.'
+          : `Setup failed: ${err.message}`;
+        setupError.textContent = msg;
+        setupError.classList.add('show');
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
