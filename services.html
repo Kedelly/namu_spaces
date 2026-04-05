@@ -242,6 +242,11 @@
     </div>
   </div>
 
+  <!-- ===== Firebase SDK (must load before db.js) ===== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/main.js"></script>
   <script>
@@ -254,16 +259,22 @@
       if (!isOpen) item.classList.add('open');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Render all services with full description
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Render all services from Firestore with full description
       const container = document.getElementById('all-services');
-      const services = NamuDB.getServices();
-      if (container && services.length) {
+      if (!container) return;
+      container.innerHTML = '<div class="skeleton" style="height:480px;border-radius:12px;"></div>'.repeat(4);
+      try {
+        const services = await NamuDB.getServices();
+        if (!services.length) {
+          container.innerHTML = '<div class="empty-state"><p>Services coming soon.</p></div>';
+          return;
+        }
         container.innerHTML = services.map(svc => `
           <div class="service-card reveal">
             <div class="service-card-img">
               <img src="${svc.image}" alt="${svc.title}" loading="lazy"
-                   onerror="this.src='https://placehold.co/600x340/e8d9c0/8c5e3c?text=Service'">
+                   onerror="this.src='https://picsum.photos/seed/svc-fallback/600/340'">
             </div>
             <div class="service-card-body">
               <div class="service-icon">${svc.icon}</div>
@@ -277,7 +288,6 @@
             </div>
           </div>
         `).join('');
-
         container.querySelectorAll('[data-open-modal="consultation"]').forEach(btn => {
           btn.addEventListener('click', () => {
             document.getElementById('consultation-modal')?.classList.add('open');
@@ -285,6 +295,9 @@
           });
         });
         initScrollAnimations();
+      } catch(e) {
+        container.innerHTML = '<div class="empty-state"><p>Could not load services. Please check your connection.</p></div>';
+        console.error('[Services]', e);
       }
     });
   </script>
