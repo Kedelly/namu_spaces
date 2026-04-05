@@ -104,7 +104,7 @@ const NamuDB = (() => {
         title: 'The Serene Apartment — Kilimani',
         category: 'residential',
         description: 'A light-filled two-bedroom apartment transformed with earthy tones, natural materials, and thoughtful storage solutions. The brief was "calm and clutter-free." We delivered exactly that.',
-        image: 'https://picsum.photos/seed/apart-proj/900/700',
+        image: 'https://res.cloudinary.com/dswbdhom6/image/upload/v1775379739/Image_ku6za9.png',
         year: 2024,
         location: 'Kilimani, Nairobi',
         featured: true
@@ -114,7 +114,7 @@ const NamuDB = (() => {
         title: 'Creative Co-Working Studio — Westlands',
         category: 'commercial',
         description: 'A dynamic co-working space designed to inspire productivity and collaboration. Warm wood tones, curved furniture, and biophilic elements create an environment people genuinely enjoy working in.',
-        image: 'https://picsum.photos/seed/cowork-proj/900/700',
+        image: 'https://res.cloudinary.com/dswbdhom6/image/upload/v1775379712/WhatsApp_Image_2026-03-03_at_01.23.09_1_xc7ncc.jpg',
         year: 2024,
         location: 'Westlands, Nairobi',
         featured: true
