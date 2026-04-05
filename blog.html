@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Namu Spaces blog — interior design tips, trends and inspiration for Nairobi homes and offices. Read our latest articles.">
+  <meta name="keywords" content="interior design blog Nairobi, home design tips Kenya, interior design trends Africa, Nairobi living spaces">
+  <title>Blog — Namu Spaces | Interior Design Tips & Trends</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Blog listing vs single post toggle */
+    #blog-listing { display: block; }
+    #blog-post-content { display: none; }
+    body.post-view #blog-listing { display: none; }
+    body.post-view #blog-post-content { display: block; }
+
+    .blog-categories {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+      justify-content: center;
+    }
+    .blog-hero-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .blog-hero-card {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      aspect-ratio: 16/10;
+    }
+    .blog-hero-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .blog-hero-card:hover img { transform: scale(1.05); }
+    .blog-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(26,18,11,0.88) 0%, rgba(26,18,11,0.2) 60%, transparent 100%);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .blog-hero-overlay .card-tag { margin-bottom: 0.5rem; }
+    .blog-hero-overlay h2, .blog-hero-overlay h3 { color: var(--cream); line-height: 1.3; }
+    .blog-hero-overlay h2 { font-size: clamp(1.4rem, 2.5vw, 2rem); }
+    .blog-hero-overlay h3 { font-size: 1.2rem; }
+    .blog-hero-overlay p { color: rgba(250,250,245,0.75); font-size: 0.88rem; margin-top: 0.5rem; }
+    .blog-hero-overlay .blog-meta { margin-top: 0.75rem; }
+    .blog-hero-overlay .blog-meta span { color: rgba(250,250,245,0.6); }
+    .blog-hero-overlay .blog-cat { color: var(--gold-light) !important; }
+
+    .blog-sidebar { display: grid; grid-template-rows: 1fr 1fr; gap: 2rem; }
+    .blog-sidebar .blog-hero-card { aspect-ratio: auto; height: 100%; min-height: 180px; }
+
+    /* Post view styles */
+    .post-header { margin-bottom: 3rem; text-align: center; padding-top: 2rem; }
+    .post-header h1 { font-size: clamp(2rem, 5vw, 3.5rem); margin: 1rem 0; }
+    .post-header .post-meta { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+    .post-author-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: var(--sand-light);
+      border-radius: var(--radius-lg);
+      margin: 3rem 0;
+    }
+    .post-author-bar img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+    .related-posts { margin-top: 5rem; }
+    @media (max-width: 760px) {
+      .blog-hero-grid { grid-template-columns: 1fr; }
+      .blog-sidebar { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .blog-sidebar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="page-loader" class="page-loader"><div class="loader-logo" style="display:flex;align-items:center;gap:0.75rem;"><img src="images/logo.jpg" alt="" style="height:48px;width:48px;border-radius:10px;object-fit:cover;">Namu <span>Spaces</span></div><div class="loader-bar"><div class="loader-bar-fill"></div></div></div>
+
+  <nav class="navbar scrolled">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><img src="images/logo.jpg" alt="Namu Spaces Logo" class="nav-logo-img"><span>Namu <span>Spaces</span></span></a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="about.html" class="nav-link">About</a></li>
+        <li><a href="services.html" class="nav-link">Services</a></li>
+        <li><a href="portfolio.html" class="nav-link">Portfolio</a></li>
+        <li><a href="blog.html" class="nav-link active">Blog</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+      <button class="btn btn-primary nav-cta" data-open-modal="consultation">Book Consultation</button>
+      <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+  <div class="nav-mobile" id="nav-mobile">
+    <a href="index.html" class="nav-link">Home</a><a href="about.html" class="nav-link">About</a>
+    <a href="services.html" class="nav-link">Services</a><a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="blog.html" class="nav-link">Blog</a><a href="contact.html" class="nav-link">Contact</a>
+    <button class="btn btn-primary" data-open-modal="consultation">Book Consultation</button>
+  </div>
+
+  <!-- =================== BLOG LISTING =================== -->
+  <div id="blog-listing">
+    <section class="page-hero">
+      <div class="breadcrumb" style="justify-content:center;margin-bottom:1.5rem;"><a href="index.html">Home</a> / <span>Blog</span></div>
+      <span class="eyebrow" style="color:var(--gold-light);">Design Insights</span>
+      <h1>Our Blog</h1>
+      <p>Interior design tips, Nairobi living inspiration, trends, and behind-the-scenes stories from our studio.</p>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <!-- Featured Hero Layout -->
+        <div id="blog-hero-section" class="blog-hero-grid reveal">
+          <!-- Populated by JS -->
+          <div class="skeleton" style="border-radius:12px;aspect-ratio:16/10;"></div>
+          <div class="blog-sidebar">
+            <div class="skeleton" style="border-radius:12px;"></div>
+            <div class="skeleton" style="border-radius:12px;"></div>
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="blog-categories reveal" id="blog-cats">
+          <button class="filter-btn active" data-cat="all">All Articles</button>
+          <button class="filter-btn" data-cat="Design Tips">Design Tips</button>
+          <button class="filter-btn" data-cat="Design Trends">Design Trends</button>
+          <button class="filter-btn" data-cat="Nairobi Living">Nairobi Living</button>
+          <button class="filter-btn" data-cat="Behind the Scenes">Behind the Scenes</button>
+        </div>
+
+        <!-- Blog Grid -->
+        <div class="grid-3" id="blog-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Newsletter Signup -->
+        <div class="reveal" style="background:var(--espresso);border-radius:var(--radius-lg);padding:3rem;text-align:center;margin-top:4rem;">
+          <span class="eyebrow" style="color:var(--gold-light);">Stay Inspired</span>
+          <h3 style="color:var(--cream);font-size:1.8rem;margin:0.5rem 0 0.75rem;">Get Design Tips in Your Inbox</h3>
+          <p style="color:rgba(250,250,245,0.65);margin-bottom:2rem;">Join our community of Nairobi homeowners and receive monthly design inspiration, tips, and exclusive offers.</p>
+          <form id="newsletter-form" style="display:flex;gap:1rem;max-width:480px;margin:0 auto;flex-wrap:wrap;">
+            <input type="email" name="email" placeholder="Your email address" class="form-control" style="flex:1;min-width:200px;" required>
+            <button type="submit" class="btn btn-gold">Subscribe →</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =================== SINGLE POST VIEW =================== -->
+  <div id="blog-post-content">
+    <section class="section" style="padding-top:8rem;">
+      <div class="container">
+        <!-- Populated dynamically by initBlogReader() in main.js -->
+        <div class="skeleton" style="height:500px;border-radius:12px;margin-bottom:3rem;"></div>
+        <div class="skeleton" style="height:200px;border-radius:8px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- CTA -->
+  <section class="cta-banner">
+    <div class="container text-center reveal">
+      <span class="eyebrow" style="color:var(--gold-light);">Ready to Transform Your Space?</span>
+      <h2>Turn Inspiration Into Reality</h2>
+      <p>Our Nairobi design team is ready to help you create the space you've been dreaming of.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;">
+        <button class="btn btn-gold btn-lg" data-open-modal="consultation">Book a Consultation</button>
+        <a href="portfolio.html" class="btn btn-light btn-lg">View Our Work</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand"><a href="index.html" class="nav-logo"><img src="images/logo.jpg" alt="Namu Spaces Logo" class="nav-logo-img"><span>Namu <span>Spaces</span></span></a><p>Thoughtful interior design for Nairobi homes and spaces.</p><p class="tagline-text">"Functional. Calm. Intentional."</p></div>
+      <div class="footer-col"><h4>Pages</h4><ul class="footer-links"><li><a href="about.html">About</a></li><li><a href="services.html">Services</a></li><li><a href="portfolio.html">Portfolio</a></li><li><a href="blog.html">Blog</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Services</h4><ul class="footer-links"><li><a href="services.html">Consultation</a></li><li><a href="services.html">Space Planning</a></li><li><a href="services.html">3D Renders</a></li><li><a href="services.html">Styling</a></li></ul></div>
+      <div class="footer-col"><h4>Contact</h4><ul class="footer-links"><li><span data-setting="phone"></span></li><li><a href="#" data-setting="email"></a></li><li><span data-setting="address"></span></li></ul></div>
+    </div>
+    <div class="footer-bottom" style="max-width:var(--container);margin:0 auto;"><p>&copy; <span id="footer-year"></span> Namu Spaces. All rights reserved.</p></div>
+  </footer>
+
+  <a id="whatsapp-fab" href="#" class="whatsapp-fab" data-wa-link>
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+    <span class="fab-label">Chat with Us</span>
+  </a>
+
+  <div id="consultation-modal" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-close">×</button>
+      <span class="eyebrow">Get Started</span>
+      <h2>Book a Consultation</h2>
+      <p class="modal-sub">Tell us about your space and we'll be in touch within 24 hours.</p>
+      <form id="consultation-form" novalidate>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name *</label><input type="text" name="name" class="form-control" required></div>
+          <div class="form-group"><label>Phone *</label><input type="tel" name="phone" class="form-control" required></div>
+        </div>
+        <div class="form-group"><label>Email *</label><input type="email" name="email" class="form-control" required></div>
+        <div class="form-group"><label>Service</label><select name="service" class="form-control"><option>Interior Design Consultation</option><option>Space Planning</option><option>3D Renders</option><option>Interior Styling</option></select></div>
+        <div class="form-group"><label>Your Space</label><textarea name="message" class="form-control" rows="3"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">Send Enquiry →</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      NamuDB.init();
+      const urlParams = new URLSearchParams(window.location.search);
+      const postId = urlParams.get('id');
+
+      if (postId) {
+        // Single post view
+        document.body.classList.add('post-view');
+        const postContent = document.getElementById('blog-post-content');
+        const post = NamuDB.getBlogPost(parseInt(postId));
+
+        if (!post) {
+          postContent.innerHTML = '<div class="container"><div class="empty-state"><div class="empty-icon">📄</div><p>Article not found. <a href="blog.html">Return to blog →</a></p></div></div>';
+          return;
+        }
+
+        document.title = `${post.title} — Namu Spaces Blog`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.content = post.excerpt;
+
+        const team = NamuDB.getTeam();
+        const author = team.find(m => m.name === post.author) || {};
+        const authorImg = author.image || `https://placehold.co/80/e8d9c0/8c5e3c?text=${post.author?.charAt(0)||'N'}`;
+
+        // Get related posts (same category, excluding current)
+        const related = NamuDB.getBlogPosts()
+          .filter(p => p.id !== post.id && p.category === post.category)
+          .slice(0, 3);
+
+        postContent.innerHTML = `
+          <section class="section" style="padding-top:8rem;">
+            <div class="container">
+              <div class="blog-detail-content">
+                <div class="breadcrumb" style="margin-bottom:2rem;">
+                  <a href="blog.html">Blog</a> / <span>${post.category}</span>
+                </div>
+                <span class="card-tag">${post.category}</span>
+                <h1 style="margin:1rem 0 1.5rem;font-size:clamp(2rem,5vw,3.2rem);">${post.title}</h1>
+                <div class="d-flex align-center gap-1" style="margin-bottom:2.5rem;flex-wrap:wrap;">
+                  <span class="text-muted" style="font-size:0.85rem;">By ${post.author}</span>
+                  <span class="text-muted" style="opacity:0.4;">·</span>
+                  <span class="text-muted" style="font-size:0.85rem;">${NamuDB.formatDate(post.date)}</span>
+                </div>
+                <div class="blog-detail-hero">
+                  <img src="${post.image}" alt="${post.title}" loading="lazy"
+                       onerror="this.src='https://placehold.co/900x450/e8d9c0/8c5e3c?text=Article'">
+                </div>
+                <div style="margin-top:3rem;">${post.content}</div>
+
+                <!-- Author bar -->
+                <div class="post-author-bar">
+                  <img src="${authorImg}" alt="${post.author}"
+                       onerror="this.src='https://placehold.co/80/e8d9c0/8c5e3c?text=${post.author?.charAt(0)||'N'}'">
+                  <div>
+                    <div style="font-weight:600;margin-bottom:0.2rem;">${post.author}</div>
+                    <div style="font-size:0.85rem;color:var(--sienna);">${author.role || 'Interior Designer, Namu Spaces'}</div>
+                    <div style="font-size:0.85rem;margin-top:0.4rem;opacity:0.7;">Based in Nairobi, Kenya</div>
+                  </div>
+                </div>
+
+                <!-- CTA -->
+                <div style="background:var(--sand-light);padding:2.5rem;border-radius:var(--radius-lg);text-align:center;margin:3rem 0;">
+                  <h3 style="margin-bottom:0.75rem;">Ready to Transform Your Space?</h3>
+                  <p style="margin-bottom:1.5rem;">Book a consultation with our Nairobi design team and take the first step.</p>
+                  <button class="btn btn-primary" data-open-modal="consultation">Book a Consultation</button>
+                </div>
+
+                <!-- Related Posts -->
+                ${related.length ? `
+                  <div class="related-posts">
+                    <h3 style="margin-bottom:2rem;">More from Our Blog</h3>
+                    <div class="grid-3">
+                      ${related.map(rp => `
+                        <a href="blog.html?id=${rp.id}" class="blog-card" style="text-decoration:none;">
+                          <div class="blog-card-img">
+                            <img src="${rp.image}" alt="${rp.title}" loading="lazy"
+                                 onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
+                          </div>
+                          <div class="blog-card-body">
+                            <div class="blog-meta"><span class="blog-cat">${rp.category}</span><span class="blog-date">${NamuDB.formatDate(rp.date)}</span></div>
+                            <h3 style="font-size:1.1rem;">${rp.title}</h3>
+                          </div>
+                        </a>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </section>`;
+
+        // Re-init modal after dynamic render
+        document.querySelectorAll('[data-open-modal="consultation"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('consultation-modal')?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+          });
+        });
+      } else {
+        // Blog listing
+        const posts = NamuDB.getBlogPosts();
+
+        // Hero featured layout (first 3 posts)
+        const heroSection = document.getElementById('blog-hero-section');
+        if (heroSection && posts.length >= 1) {
+          const [featured, ...rest] = posts;
+          heroSection.innerHTML = `
+            <a href="blog.html?id=${featured.id}" class="blog-hero-card">
+              <img src="${featured.image}" alt="${featured.title}" loading="lazy"
+                   onerror="this.src='https://placehold.co/800x500/e8d9c0/8c5e3c?text=Article'">
+              <div class="blog-hero-overlay">
+                <span class="card-tag">${featured.category}</span>
+                <h2>${featured.title}</h2>
+                <p>${featured.excerpt.substring(0, 100)}…</p>
+                <div class="blog-meta"><span class="blog-date">${NamuDB.formatDate(featured.date)}</span></div>
+              </div>
+            </a>
+            <div class="blog-sidebar">
+              ${rest.slice(0, 2).map(p => `
+                <a href="blog.html?id=${p.id}" class="blog-hero-card">
+                  <img src="${p.image}" alt="${p.title}" loading="lazy"
+                       onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
+                  <div class="blog-hero-overlay">
+                    <span class="card-tag" style="font-size:0.65rem;">${p.category}</span>
+                    <h3>${p.title}</h3>
+                    <div class="blog-meta"><span class="blog-date" style="font-size:0.75rem;">${NamuDB.formatDate(p.date)}</span></div>
+                  </div>
+                </a>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // Blog grid (all posts)
+        renderBlogCards('blog-grid');
+
+        // Category filter
+        document.querySelectorAll('#blog-cats .filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#blog-cats .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const cat = btn.dataset.cat;
+            const allPosts = NamuDB.getBlogPosts();
+            const filtered = cat === 'all' ? allPosts : allPosts.filter(p => p.category === cat);
+            const grid = document.getElementById('blog-grid');
+            if (!filtered.length) {
+              grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">✍️</div><p>No articles in this category yet.</p></div>';
+              return;
+            }
+            grid.innerHTML = filtered.map(post => `
+              <article class="blog-card reveal">
+                <a href="blog.html?id=${post.id}" class="blog-card-img" style="display:block;">
+                  <img src="${post.image}" alt="${post.title}" loading="lazy"
+                       onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
+                </a>
+                <div class="blog-card-body">
+                  <div class="blog-meta"><span class="blog-cat">${post.category}</span><span class="blog-date">${NamuDB.formatDate(post.date)}</span></div>
+                  <h3>${post.title}</h3>
+                  <p>${post.excerpt}</p>
+                  <a href="blog.html?id=${post.id}" class="blog-read-more">Read Article →</a>
+                </div>
+              </article>
+            `).join('');
+            initScrollAnimations();
+          });
+        });
+
+        // Newsletter form
+        document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const email = e.target.email.value;
+          NamuDB.addInquiry({ type: 'newsletter', email, name: 'Newsletter Subscriber' });
+          showToast('Thank you for subscribing! 🎉', 'success');
+          e.target.reset();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
