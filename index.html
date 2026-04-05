@@ -555,6 +555,11 @@
 
   <!-- ==================== SCRIPTS ==================== -->
   <!-- NOTE: db.js and main.js loaded first; homepage init runs after both are ready -->
+    <!-- ===== Firebase SDK (must load before db.js) ===== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/main.js"></script>
   <script>
@@ -600,14 +605,5 @@
       /* --- 4. Testimonials: render content THEN init slider (once, here only).
                main.js intentionally skips initTestimonialSlider on pages where
                the track is empty on DOMContentLoaded — but to be safe we also
-               call it here after content is injected. --- */
-      renderTestimonials();
-      initTestimonialSlider();
-
-      /* --- 5. Re-run scroll observer so dynamically added .reveal elements animate --- */
-      initScrollAnimations();
-
-    });
-  </script>
-</body>
-</html>
+               call it her
+      
