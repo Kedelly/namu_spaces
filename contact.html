@@ -119,7 +119,7 @@
             <div class="contact-icon">✉️</div>
             <div>
               <h4 style="margin-bottom:0.3rem;">Email</h4>
-              <p><a href="/cdn-cgi/l/email-protection#88ffe9eae7e5eae9e5edece1e6e9beb8c8efe5e9e1e4a6ebe7e5" data-setting="email"><span class="__cf_email__" data-cfemail="dea9bfbcb1b3bcbfb3bbbab7b0bfe8ee9eb9b3bfb7b2f0bdb1b3">[email&#160;protected]</span></a></p>
+              <p><a href="mailto:wabombamedina60@gmail.com" data-setting="email">wabombamedina60@gmail.com</a></p>
               <p style="font-size:0.82rem;margin-top:0.2rem;">We respond within 24 hours</p>
             </div>
           </div>
@@ -198,20 +198,20 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="cf-name">Full Name *</label>
-                  <input type="text" id="cf-name" name="name" class="form-control" placeholder="Your full name" required autocomplete="name">
+                  <input type="text" id="cf-name" name="name" class="form-control" placeholder="Your full name" required>
                 </div>
                 <div class="form-group">
                   <label for="cf-phone">Phone Number *</label>
-                  <input type="tel" id="cf-phone" name="phone" class="form-control" placeholder="+254 700 000 000" required autocomplete="tel">
+                  <input type="tel" id="cf-phone" name="phone" class="form-control" placeholder="+254 700 000 000" required>
                 </div>
               </div>
               <div class="form-group">
                 <label for="cf-email">Email Address *</label>
-                <input type="email" id="cf-email" name="email" class="form-control" placeholder="you@example.com" required autocomplete="email">
+                <input type="email" id="cf-email" name="email" class="form-control" placeholder="you@example.com" required>
               </div>
               <div class="form-group">
                 <label for="cf-service">Service of Interest</label>
-                <select id="cf-service" name="service" class="form-control" autocomplete="off">
+                <select id="cf-service" name="service" class="form-control">
                   <option value="">Select a service…</option>
                   <option>Interior Design Consultation</option>
                   <option>Space Planning & Layout</option>
@@ -224,7 +224,7 @@
               </div>
               <div class="form-group">
                 <label for="cf-budget">Approximate Budget</label>
-                <select id="cf-budget" name="budget" class="form-control" autocomplete="off">
+                <select id="cf-budget" name="budget" class="form-control">
                   <option value="">Select a range…</option>
                   <option>Under KES 50,000</option>
                   <option>KES 50,000 – 150,000</option>
@@ -236,11 +236,11 @@
               <div class="form-group">
                 <label for="cf-message">Tell Us About Your Space *</label>
                 <textarea id="cf-message" name="message" class="form-control" rows="5"
-                          placeholder="Describe your space (e.g. 2-bedroom apartment in Kilimani), what you'd like to change, your timeline, and any inspirations or must-haves…" required autocomplete="off"></textarea>
+                          placeholder="Describe your space (e.g. 2-bedroom apartment in Kilimani), what you'd like to change, your timeline, and any inspirations or must-haves…" required></textarea>
               </div>
               <div class="form-group">
-                <label for="cf-referral">How Did You Hear About Us?</label>
-                <select id="cf-referral" name="referral" class="form-control" autocomplete="off">
+                <label>How Did You Hear About Us?</label>
+                <select name="referral" class="form-control">
                   <option value="">Select…</option>
                   <option>Instagram</option>
                   <option>TikTok</option>
@@ -320,35 +320,25 @@
       <p class="modal-sub">Tell us about your space and we'll be in touch within 24 hours.</p>
       <form id="consultation-form" novalidate>
         <div class="form-row">
-          <div class="form-group">
-            <label for="modal-name">Full Name *</label>
-            <input type="text" id="modal-name" name="name" class="form-control" required autocomplete="name">
-          </div>
-          <div class="form-group">
-            <label for="modal-phone">Phone *</label>
-            <input type="tel" id="modal-phone" name="phone" class="form-control" required autocomplete="tel">
-          </div>
+          <div class="form-group"><label>Full Name *</label><input type="text" name="name" class="form-control" required></div>
+          <div class="form-group"><label>Phone *</label><input type="tel" name="phone" class="form-control" required></div>
         </div>
-        <div class="form-group">
-          <label for="modal-email">Email *</label>
-          <input type="email" id="modal-email" name="email" class="form-control" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="modal-service">Service</label>
-          <select id="modal-service" name="service" class="form-control" autocomplete="off">
-            <option>Interior Design Consultation</option>
-            <option>Space Planning</option>
-            <option>3D Renders</option>
-            <option>Interior Styling</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="modal-message">Your Space</label>
-          <textarea id="modal-message" name="message" class="form-control" rows="3" autocomplete="off"></textarea>
-        </div>
+        <div class="form-group"><label>Email *</label><input type="email" name="email" class="form-control" required></div>
+        <div class="form-group"><label>Service</label><select name="service" class="form-control"><option>Interior Design Consultation</option><option>Space Planning</option><option>3D Renders</option><option>Interior Styling</option></select></div>
+        <div class="form-group"><label>Your Space</label><textarea name="message" class="form-control" rows="3"></textarea></div>
         <button type="submit" class="btn btn-primary w-100">Send Enquiry →</button>
       </form>
     </div>
   </div>
+
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
