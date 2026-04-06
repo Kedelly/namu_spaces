@@ -10,179 +10,282 @@
   <meta property="og:description" content="Functional. Calm. Intentional spaces. Nairobi's trusted interior design studio.">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Namu Spaces — Interior Design Nairobi">
   <title>Namu Spaces — Functional. Calm. Intentional. | Interior Design Nairobi</title>
   <link rel="stylesheet" href="css/style.css">
+
   <style>
-    /* ---- Transparent hero nav ---- */
+    /* ====================================================
+       INDEX PAGE — Inline styles
+       (Only styles not already in style.css)
+    ==================================================== */
+
+    /* ---- Transparent nav on hero ---- */
     .navbar.transparent .nav-logo,
     .navbar.transparent .nav-link { color: var(--espresso); }
 
-    /* ---- Hero layout ---- */
+    /* ---- Hero ---- */
     .hero {
       min-height: 100vh;
       display: grid;
       grid-template-columns: 1fr 1fr;
       position: relative;
       padding-top: var(--nav-h);
+      overflow: hidden;
     }
     .hero-content {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 6rem 4rem 6rem 2rem;
-      max-width: 680px;
+      padding: 5rem 3rem 5rem 2rem;
+      max-width: 640px;
       margin-left: auto;
+      position: relative;
+      z-index: 1;
     }
     .hero-image {
       position: relative;
       overflow: hidden;
       background: var(--sand);
+      min-height: 500px;
     }
-    .hero-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    /* fallback gradient — always visible behind the real image */
     .hero-image-fallback {
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--sand) 0%, var(--sand-light) 50%, var(--sienna) 100%);
+      background: linear-gradient(135deg, var(--sand) 0%, var(--sienna) 100%);
+      z-index: 0;
     }
     .hero-image-fallback .fallback-logo {
       text-align: center;
       padding: 2rem;
     }
     .hero-image-fallback .fallback-logo img {
-      width: 160px;
-      height: 160px;
-      border-radius: 20px;
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
       object-fit: cover;
-      margin: 0 auto 1.5rem;
-      opacity: 0.9;
+      margin: 0 auto 1rem;
+      display: block;
     }
     .hero-image-fallback .fallback-logo p {
       font-family: var(--font-display);
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       font-style: italic;
       color: var(--cream);
-      opacity: 0.85;
+      opacity: 0.9;
     }
-
-    /* ---- About preview ---- */
-    .about-preview-img {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .about-preview-img img {
+    /* real hero image — sits above fallback, fades in when loaded */
+    .hero-main-img {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      aspect-ratio: 4/5;
+      height: 100%;
       object-fit: cover;
+      object-position: center;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.8s ease;
       display: block;
     }
-    .about-preview-img .img-badge {
+    .hero-main-img.loaded { opacity: 1; }
+
+    .hero-scroll {
       position: absolute;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      background: var(--sienna);
-      color: var(--cream);
-      padding: 1.5rem;
-      border-radius: var(--radius-lg);
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-    }
-    .about-preview-img .img-badge .num {
-      font-family: var(--font-display);
-      font-size: 2.2rem;
-      font-weight: 300;
-      line-height: 1;
-    }
-    .about-preview-img .img-badge .lbl {
-      font-size: 0.7rem;
+      bottom: 2rem;
+      left: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      opacity: 0.85;
-      margin-top: 4px;
+      color: var(--muted);
+      z-index: 2;
+      animation: scrollBounce 2.5s infinite;
+    }
+    .hero-scroll::before {
+      content: '';
+      width: 36px;
+      height: 1px;
+      background: var(--muted);
+      display: block;
+    }
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(5px); }
     }
 
     /* ---- Values strip ---- */
     .values-strip {
       display: flex;
       background: var(--espresso);
-      overflow: hidden;
     }
     .values-strip .val-item {
       flex: 1;
-      padding: 3rem 2rem;
+      padding: 2.5rem 1.5rem;
       border-right: 1px solid rgba(255,255,255,0.08);
       text-align: center;
     }
     .values-strip .val-item:last-child { border-right: none; }
     .values-strip .val-num {
       font-family: var(--font-display);
-      font-size: 3rem;
+      font-size: 2.8rem;
       font-weight: 300;
       color: var(--gold);
-      display: block;
       line-height: 1;
+      display: block;
     }
     .values-strip .val-label {
-      font-size: 0.78rem;
-      font-weight: 500;
+      font-size: 0.72rem;
+      font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(250,250,245,0.55);
+      color: rgba(250,250,245,0.5);
       margin-top: 0.5rem;
       display: block;
     }
 
-    /* ---- Hero scroll hint ---- */
-    .hero-scroll {
+    /* ---- About preview image ---- */
+    .about-preview-img {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--sand-light);
+    }
+    .about-preview-img img {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      display: block;
+    }
+    .about-img-badge {
       position: absolute;
-      bottom: 2.5rem;
-      left: 2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.75rem;
-      font-weight: 500;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--sienna);
+      color: var(--cream);
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius-lg);
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .about-img-badge .num {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 300;
+      line-height: 1;
+      display: block;
+    }
+    .about-img-badge .lbl {
+      font-size: 0.68rem;
+      font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
-      animation: scrollBounce 2.5s infinite;
-    }
-    .hero-scroll::before {
-      content: '';
-      width: 40px;
-      height: 1px;
-      background: var(--muted);
-    }
-    @keyframes scrollBounce {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(6px); }
+      opacity: 0.85;
+      margin-top: 4px;
+      display: block;
     }
 
-    /* ---- Responsive ---- */
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; }
-      .hero-image { height: 55vw; min-height: 280px; }
-      .hero-content { padding: 3rem 1.5rem; max-width: 100%; }
-      .hero-scroll { display: none; }
+    /* ---- Section skeleton loaders ---- */
+    .skeleton-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
     }
-    @media (max-width: 640px) {
+    .skeleton-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* ====================================================
+       RESPONSIVE — Mobile First
+    ==================================================== */
+
+    /* Tablet: ≤ 1024px */
+    @media (max-width: 1024px) {
+      .skeleton-grid-3 { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Tablet/large phone: ≤ 900px */
+    @media (max-width: 900px) {
+      /* Hero stacks vertically */
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .hero-content {
+        order: 1;
+        padding: 3rem 1.5rem 2.5rem;
+        max-width: 100%;
+        margin-left: 0;
+      }
+      .hero-image {
+        order: 2;
+        min-height: 56vw;
+        width: 100%;
+      }
+      .hero-scroll { display: none; }
+
+      /* About section stacks — text first on mobile */
+      .about-grid-reverse { display: flex; flex-direction: column-reverse; }
+      .about-img-badge { right: 1rem; bottom: 1rem; }
+
+      /* Values strip wraps to 2×2 */
       .values-strip { flex-wrap: wrap; }
       .values-strip .val-item {
         flex: 1 1 50%;
         border-right: none;
         border-bottom: 1px solid rgba(255,255,255,0.08);
-        padding: 2rem 1rem;
       }
+      .values-strip .val-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.08); }
+      .values-strip .val-item:nth-last-child(-n+2) { border-bottom: none; }
+
+      /* Skeleton grids */
+      .skeleton-grid-3 { grid-template-columns: 1fr 1fr; }
+      .skeleton-grid-2 { grid-template-columns: 1fr; }
+
+      /* Portfolio masonry — 2 columns */
+      #featured-portfolio.portfolio-grid { columns: 2 !important; column-gap: 1rem; }
+    }
+
+    /* Phone: ≤ 640px */
+    @media (max-width: 640px) {
+      .hero-image { min-height: 72vw; }
+
+      /* Values strip: 2×2 on small phones too */
+      .values-strip .val-item { padding: 1.75rem 1rem; }
+      .values-strip .val-num  { font-size: 2rem; }
+
+      /* Single column grids */
+      .skeleton-grid-3 { grid-template-columns: 1fr; }
+
+      /* Portfolio masonry — 1 column on phones */
+      #featured-portfolio.portfolio-grid { columns: 1 !important; }
+
+      /* Instagram grid — 2 columns on phones */
+      .instagram-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+      /* Hero CTAs stack */
+      .hero-ctas { flex-direction: column; align-items: flex-start; }
+      .hero-ctas .btn { width: 100%; justify-content: center; }
+
+      /* About badge smaller */
+      .about-img-badge { padding: 1rem; }
+      .about-img-badge .num { font-size: 1.5rem; }
+
+      /* CTA banner text centre */
+      .cta-banner h2 { font-size: clamp(1.6rem, 6vw, 2.5rem); }
+    }
+
+    /* Small phones: ≤ 400px */
+    @media (max-width: 400px) {
+      .hero-ctas .btn { font-size: 0.8rem; padding: 0.85rem 1.25rem; }
+      .values-strip .val-num { font-size: 1.75rem; }
     }
   </style>
 </head>
@@ -191,7 +294,7 @@
   <!-- ==================== PAGE LOADER ==================== -->
   <div id="page-loader" class="page-loader" aria-hidden="true">
     <div class="loader-logo" style="display:flex;align-items:center;gap:0.75rem;">
-      <img src="images/logo.jpg" alt="" style="height:48px;width:48px;border-radius:10px;object-fit:cover;">
+      <img src="images/logo.jpg" alt="" style="height:44px;width:44px;border-radius:10px;object-fit:cover;">
       Namu <span>Spaces</span>
     </div>
     <div class="loader-bar"><div class="loader-bar-fill"></div></div>
@@ -205,12 +308,12 @@
         <span>Namu <span>Spaces</span></span>
       </a>
       <ul class="nav-links" role="list">
-        <li><a href="index.html" class="nav-link active">Home</a></li>
-        <li><a href="about.html" class="nav-link">About</a></li>
+        <li><a href="index.html"    class="nav-link active">Home</a></li>
+        <li><a href="about.html"    class="nav-link">About</a></li>
         <li><a href="services.html" class="nav-link">Services</a></li>
-        <li><a href="portfolio.html" class="nav-link">Portfolio</a></li>
-        <li><a href="blog.html" class="nav-link">Blog</a></li>
-        <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="portfolio.html"class="nav-link">Portfolio</a></li>
+        <li><a href="blog.html"     class="nav-link">Blog</a></li>
+        <li><a href="contact.html"  class="nav-link">Contact</a></li>
       </ul>
       <button class="btn btn-primary nav-cta" data-open-modal="consultation">Book Consultation</button>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
@@ -221,12 +324,12 @@
 
   <!-- Mobile Nav -->
   <div class="nav-mobile" id="nav-mobile" aria-hidden="true">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="about.html" class="nav-link">About</a>
+    <a href="index.html"    class="nav-link">Home</a>
+    <a href="about.html"    class="nav-link">About</a>
     <a href="services.html" class="nav-link">Services</a>
-    <a href="portfolio.html" class="nav-link">Portfolio</a>
-    <a href="blog.html" class="nav-link">Blog</a>
-    <a href="contact.html" class="nav-link">Contact</a>
+    <a href="portfolio.html"class="nav-link">Portfolio</a>
+    <a href="blog.html"     class="nav-link">Blog</a>
+    <a href="contact.html"  class="nav-link">Contact</a>
     <button class="btn btn-primary" data-open-modal="consultation">Book Consultation</button>
   </div>
 
@@ -241,23 +344,25 @@
         <a href="portfolio.html" class="btn btn-outline btn-lg">View Our Work</a>
       </div>
     </div>
+
     <div class="hero-image" id="hero-img-wrap">
-      <!-- Fallback shown immediately; real image layered on top when it loads -->
-      <div class="hero-image-fallback">
+      <!-- Gradient fallback: always visible behind the photo -->
+      <div class="hero-image-fallback" id="hero-fallback">
         <div class="fallback-logo">
           <img src="images/logo.jpg" alt="Namu Spaces">
           <p>"Functional. Calm. Intentional."</p>
         </div>
       </div>
-      <img id="hero-main-img"
-           src="https://unsplash.com/photos/gray-padded-chaise-couch-beside-window-rEJxpBskj3Q"
-           alt="Beautiful interior designed by Namu Spaces"
-           loading="eager"
-           style="position:absolute;inset:0;"
-           onload="this.style.opacity='1'"
-           onerror="this.style.display='none'"
-           style="opacity:0;transition:opacity 0.6s ease;">
+      <!-- FIX: single style attribute — opacity starts at 0, fades in on load -->
+      <img
+        id="hero-main-img"
+        class="hero-main-img"
+        src="https://picsum.photos/seed/nairobi-interior/900/1100"
+        alt="Beautiful interior designed by Namu Spaces"
+        loading="eager"
+        fetchpriority="high">
     </div>
+
     <div class="hero-scroll" aria-hidden="true">Scroll to explore</div>
   </section>
 
@@ -284,24 +389,29 @@
   <!-- ==================== ABOUT PREVIEW ==================== -->
   <section class="section" aria-label="About Namu Spaces">
     <div class="container">
-      <div class="grid-2" style="gap:5rem;">
+      <!-- FIX: about-grid-reverse class lets CSS swap order on mobile (text first) -->
+      <div class="grid-2 about-grid-reverse" style="gap:4rem;align-items:center;">
+
         <div class="about-preview-img reveal">
-          <img src="https://picsum.photos/seed/interior-studio/600/750"
-               alt="Namu Spaces design studio"
-               loading="lazy"
-               onerror="this.src='images/logo.jpg';this.style.objectFit='contain';this.style.padding='3rem';this.style.background='var(--sand-light)'">
-          <div class="img-badge">
-            <div class="num">Namu</div>
-            <div class="lbl">Spaces Studio</div>
+          <img
+            src="https://picsum.photos/seed/studio-nairobi/600/750"
+            alt="Namu Spaces design studio, Nairobi"
+            loading="lazy"
+            id="about-img"
+            onerror="this.src='images/logo.jpg';this.style.objectFit='contain';this.style.padding='3rem';this.style.background='var(--sand-light)'">
+          <div class="about-img-badge">
+            <span class="num">Namu</span>
+            <span class="lbl">Spaces Studio</span>
           </div>
         </div>
-        <div style="padding:2rem 0;" class="reveal reveal-delay-1">
+
+        <div class="reveal reveal-delay-1">
           <span class="eyebrow">About Us</span>
           <h2>Design That Feels Lived In</h2>
-          <p style="margin:1.5rem 0;">Namu Spaces is a Kenyan interior design studio focused on creating thoughtful, functional, and beautiful interiors. We design spaces that balance aesthetics and practicality — ensuring every room feels calm, intentional, and truly lived in.</p>
-          <p>From concept development to space planning and styling, we work closely with our clients to bring their vision to life while respecting their budget and lifestyle. Good design is not about creating trends. It is about creating spaces that feel like home.</p>
+          <p style="margin:1.5rem 0 1rem;">Namu Spaces is a Kenyan interior design studio focused on creating thoughtful, functional, and beautiful interiors. We design spaces that balance aesthetics and practicality — ensuring every room feels calm, intentional, and truly lived in.</p>
+          <p>From concept development to space planning and styling, we work closely with our clients to bring their vision to life while respecting their budget and lifestyle. Good design is not about trends — it is about creating spaces that feel like home.</p>
           <div style="display:flex;gap:1rem;margin-top:2.5rem;flex-wrap:wrap;">
-            <a href="about.html" class="btn btn-primary">Our Story</a>
+            <a href="about.html"    class="btn btn-primary">Our Story</a>
             <a href="services.html" class="btn btn-outline">Our Services</a>
           </div>
         </div>
@@ -317,11 +427,11 @@
         <h2>Our Services</h2>
         <p>From initial consultation to the final styling touch — we guide you through every stage of your interior design journey.</p>
       </div>
-      <!-- Skeletons shown while JS loads content -->
+      <!-- Skeleton while Firebase loads; JS replaces this -->
       <div class="grid-3" id="featured-services">
-        <div class="skeleton" style="height:420px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:420px;border-radius:12px;"></div>
-        <div class="skeleton" style="height:420px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:400px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:400px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:400px;border-radius:12px;"></div>
       </div>
       <div class="text-center mt-3">
         <a href="services.html" class="btn btn-primary">View All Services</a>
@@ -337,9 +447,15 @@
         <h2>Featured Projects</h2>
         <p>A curated selection from our portfolio of Nairobi homes, offices, and commercial spaces.</p>
       </div>
-      <div class="portfolio-grid" id="featured-portfolio">
-        <!-- Populated by JS -->
+      <!-- Skeleton grid while async data loads -->
+      <div class="skeleton-grid-2" id="portfolio-skeleton">
+        <div class="skeleton" style="height:260px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:260px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:260px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:260px;border-radius:12px;"></div>
       </div>
+      <!-- Masonry grid injected by JS (hidden until ready) -->
+      <div class="portfolio-grid" id="featured-portfolio" style="display:none;"></div>
       <div class="text-center mt-3 reveal">
         <a href="portfolio.html" class="btn btn-outline">View Full Portfolio</a>
       </div>
@@ -354,9 +470,7 @@
         <h2>Trusted by Nairobi Homeowners</h2>
       </div>
       <div class="testimonial-slider">
-        <div class="testimonial-track">
-          <!-- Populated by JS -->
-        </div>
+        <div class="testimonial-track"><!-- Populated by JS --></div>
         <div class="slider-controls" style="margin-top:2rem;"></div>
       </div>
     </div>
@@ -370,8 +484,11 @@
         <h2>From Our Blog</h2>
         <p>Interior design tips, trends, and inspiration for Nairobi homes and offices.</p>
       </div>
+      <!-- Skeleton while Firebase loads -->
       <div class="grid-3" id="blog-preview-grid">
-        <!-- Populated by JS -->
+        <div class="skeleton" style="height:380px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:380px;border-radius:12px;"></div>
+        <div class="skeleton" style="height:380px;border-radius:12px;"></div>
       </div>
       <div class="text-center mt-3 reveal">
         <a href="blog.html" class="btn btn-primary">Read All Articles</a>
@@ -387,34 +504,34 @@
         <h2>@namu_spaces on Instagram</h2>
       </div>
       <div class="instagram-grid reveal">
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room1/300/300" alt="Namu Spaces Instagram" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta1/300/300" alt="Interior design inspiration" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room2/300/300" alt="Interior design" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta2/300/300" alt="Living room design" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room3/300/300" alt="Bedroom design" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta3/300/300" alt="Bedroom design" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room4/300/300" alt="Kitchen design" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta4/300/300" alt="Kitchen design" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room5/300/300" alt="Office design" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta5/300/300" alt="Office design" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
-        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item">
-          <img src="https://picsum.photos/seed/room6/300/300" alt="Living room" loading="lazy">
+        <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="insta-item" aria-label="Namu Spaces on Instagram">
+          <img src="https://picsum.photos/seed/insta6/300/300" alt="Interior styling" loading="lazy" onerror="this.closest('.insta-item').style.display='none'">
           <div class="insta-overlay">📷</div>
         </a>
       </div>
       <div class="text-center mt-2 reveal">
         <a href="https://www.instagram.com/namu_spaces?igsh=YzljYTk1ODg3Zg==" target="_blank" rel="noopener" class="btn btn-outline">
-          <svg style="width:18px;height:18px;vertical-align:middle;margin-right:6px;" viewBox="0 0 24 24" fill="currentColor">
+          <svg style="width:18px;height:18px;vertical-align:middle;margin-right:6px;" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
           </svg>
           Follow on Instagram
@@ -424,12 +541,12 @@
   </section>
 
   <!-- ==================== CTA BANNER ==================== -->
-  <section class="cta-banner" aria-label="Book consultation">
+  <section class="cta-banner" aria-label="Book consultation call to action">
     <div class="container text-center reveal">
       <span class="eyebrow" style="color:var(--gold-light);">Ready to Transform Your Space?</span>
       <h2>Let's Design Your Dream Interior</h2>
-      <p>Book a consultation with our Nairobi studio and take the first step toward a space you truly love.</p>
-      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;">
+      <p style="margin-bottom:2rem;">Book a consultation with our Nairobi studio and take the first step toward a space you truly love.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
         <button class="btn btn-gold btn-lg" data-open-modal="consultation">Book a Consultation</button>
         <a href="contact.html" class="btn btn-light btn-lg">Contact Us</a>
       </div>
@@ -444,7 +561,7 @@
           <img src="images/logo.jpg" alt="Namu Spaces Logo" class="nav-logo-img">
           <span>Namu <span>Spaces</span></span>
         </a>
-        <p>Thoughtful interior design for Nairobi homes, offices, and commercial spaces. Every detail, intentional.</p>
+        <p style="margin-top:1rem;">Thoughtful interior design for Nairobi homes, offices, and commercial spaces. Every detail, intentional.</p>
         <p class="tagline-text">"Functional. Calm. Intentional."</p>
         <div class="footer-social" style="margin-top:1.5rem;">
           <a href="#" data-social="instagram" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
@@ -485,10 +602,14 @@
         <h4>Contact</h4>
         <ul class="footer-links">
           <li><span data-setting="phone">+254 796 975 533</span></li>
-          <li><a href="mailto:wabombamedina60@gmail.com" data-setting="email">wabombamedina60@gmail.com</a></li>
+          <li>
+            <!-- FIX: Plain email — populateSiteSettings() updates this from Firebase -->
+            <a href="mailto:wabombamedina60@gmail.com" data-setting="email">wabombamedina60@gmail.com</a>
+          </li>
           <li><span data-setting="address">Design Studio, Nairobi</span></li>
-          <li style="margin-top:0.5rem;">
-            <a href="#" data-wa-link class="btn btn-outline btn-sm" style="color:var(--gold-light);border-color:rgba(255,255,255,0.2);">
+          <li style="margin-top:0.75rem;">
+            <a href="#" data-wa-link class="btn btn-outline btn-sm"
+               style="color:var(--gold-light);border-color:rgba(255,255,255,0.2);">
               💬 WhatsApp Us
             </a>
           </li>
@@ -503,7 +624,7 @@
 
   <!-- ==================== WHATSAPP FAB ==================== -->
   <a id="whatsapp-fab" href="#" class="whatsapp-fab" aria-label="Chat on WhatsApp" data-wa-link>
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
     </svg>
     <span class="fab-label">Chat with Us</span>
@@ -554,8 +675,6 @@
   </div>
 
   <!-- ==================== SCRIPTS ==================== -->
-  <!-- NOTE: db.js and main.js loaded first; homepage init runs after both are ready -->
-    <!-- ===== Firebase SDK (must load before db.js) ===== -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -563,47 +682,95 @@
   <script src="js/db.js"></script>
   <script src="js/main.js"></script>
   <script>
-    /* ============================================================
-       Homepage-specific initialisation.
-       Runs AFTER main.js DOMContentLoaded to avoid double-inits.
-       main.js handles: nav, WhatsApp, modal, scroll animations,
-       settings population, contact form, portfolio filter, blog reader.
-       This script handles: services, portfolio, blog preview,
-       testimonials (render then slider — in that order, once only).
-       ============================================================ */
-    document.getElementById('footer-year').textContent = new Date().getFullYear();
+  /* ============================================================
+     Homepage init — runs after DOMContentLoaded (fired by main.js)
+     FIX 1: Hero image uses .loaded class (no double style attr)
+     FIX 2: All async DB calls properly awaited inside async IIFE
+     FIX 3: Portfolio skeleton shown → replaced when data arrives
+     FIX 4: Testimonials rendered THEN slider initialised
+  ============================================================ */
 
-    document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
 
-      /* --- 1. Services preview (top 3 featured) --- */
-      renderServiceCards('featured-services', true);
-
-      /* --- 2. Featured portfolio grid --- */
-      const featPortfolio = NamuDB.getFeaturedPortfolio().slice(0, 6);
-      const portfolioGrid = document.getElementById('featured-portfolio');
-      if (portfolioGrid && featPortfolio.length) {
-        portfolioGrid.innerHTML = featPortfolio.map(item => `
-          <div class="portfolio-item reveal"
-               onclick="openProject(${item.id})"
-               role="button" tabindex="0"
-               aria-label="View project: ${item.title}"
-               onkeydown="if(event.key==='Enter')openProject(${item.id})">
-            <img src="${item.image}"
-                 alt="${item.title}"
-                 loading="lazy"
-                 onerror="this.src='https://picsum.photos/seed/proj${item.id}/600/400'">
-            <div class="portfolio-overlay">
-              <h3>${item.title}</h3>
-              <span>${formatCategory(item.category)} · ${item.year}</span>
-            </div>
-          </div>`).join('');
+  /* ---- Hero image fade-in ---- */
+  (function initHeroImage() {
+    const img = document.getElementById('hero-main-img');
+    if (!img) return;
+    img.addEventListener('load', () => img.classList.add('loaded'));
+    img.addEventListener('error', () => {
+      // Try a different picsum seed on error
+      if (!img.dataset.retried) {
+        img.dataset.retried = '1';
+        img.src = 'https://picsum.photos/seed/interior-design/900/1100';
+      } else {
+        img.style.display = 'none'; // fallback stays visible
       }
+    });
+    // If already cached (load fired before listener attached)
+    if (img.complete && img.naturalWidth) img.classList.add('loaded');
+  })();
 
-      /* --- 3. Blog preview (3 posts) --- */
-      renderBlogCards('blog-preview-grid', 3);
+  /* ---- Main async homepage init ---- */
+  document.addEventListener('DOMContentLoaded', () => {
+    (async () => {
+      try {
+        /* 1. Services (top 3 featured) */
+        await renderServiceCards('featured-services', true);
 
-      /* --- 4. Testimonials: render content THEN init slider (once, here only).
-               main.js intentionally skips initTestimonialSlider on pages where
-               the track is empty on DOMContentLoaded — but to be safe we also
-               call it her
-      
+        /* 2. Featured portfolio — FIX: properly awaited */
+        const skeleton  = document.getElementById('portfolio-skeleton');
+        const portGrid  = document.getElementById('featured-portfolio');
+        try {
+          const items = await NamuDB.getFeaturedPortfolio();
+          const show  = items.slice(0, 6);
+          if (skeleton) skeleton.style.display = 'none';
+          if (portGrid) {
+            if (show.length) {
+              portGrid.style.display = '';
+              portGrid.innerHTML = show.map(item => `
+                <div class="portfolio-item reveal"
+                     onclick="openProject('${item.id}')"
+                     role="button" tabindex="0"
+                     aria-label="View project: ${item.title}"
+                     onkeydown="if(event.key==='Enter')openProject('${item.id}')">
+                  <img src="${item.image}"
+                       alt="${item.title}"
+                       loading="lazy"
+                       onerror="this.src='https://picsum.photos/seed/proj-fallback/600/400'">
+                  <div class="portfolio-overlay">
+                    <h3>${item.title}</h3>
+                    <span>${formatCategory(item.category)} · ${item.year}</span>
+                  </div>
+                </div>`).join('');
+            } else {
+              portGrid.style.display = '';
+              portGrid.innerHTML = '<div class="empty-state" style="column-span:all;padding:3rem;text-align:center;"><p>Portfolio coming soon.</p></div>';
+            }
+          }
+        } catch (portErr) {
+          console.error('[Portfolio]', portErr);
+          if (skeleton) skeleton.style.display = 'none';
+          if (portGrid) {
+            portGrid.style.display = '';
+            portGrid.innerHTML = '<div class="empty-state" style="column-span:all;padding:3rem;text-align:center;color:var(--muted);"><p>Could not load portfolio. Check Firebase connection.</p></div>';
+          }
+        }
+
+        /* 3. Blog preview (3 latest posts) */
+        await renderBlogCards('blog-preview-grid', 3);
+
+        /* 4. Testimonials — render content THEN start slider */
+        await renderTestimonials();
+        initTestimonialSlider();
+
+        /* 5. Trigger scroll animations for dynamically injected content */
+        initScrollAnimations();
+
+      } catch (err) {
+        console.error('[Homepage init]', err);
+      }
+    })();
+  });
+  </script>
+</body>
+</html>
