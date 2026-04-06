@@ -359,17 +359,23 @@
 
 <script>
 /* ============================================================
-   NAMU SPACES — Admin Dashboard
-   Fixed: composite index errors, modal form access, error display,
-   saveModal label restoration, activity log, config check.
+   NAMU SPACES — Admin Dashboard (fully fixed)
+   All fixes applied:
+   1. Every async onclick handler wrapped in try/catch
+   2. Errors shown INSIDE modal + toast (not just console)
+   3. Blog category <option> value attributes added
+   4. getModalField() reads textarea .value without trim
+   5. showError() corrected panel prefix
+   6. Modal state fully reset on every open
+   7. Loading spinners shown while edit data fetches
+   8. Firebase connection verified on init
 ============================================================ */
 'use strict';
 
 /* =================== CONFIG CHECK =================== */
 (function checkConfig() {
   if (typeof firebaseConfig === 'undefined') return;
-  const isPlaceholder = firebaseConfig.apiKey && firebaseConfig.apiKey.includes('PASTE_YOUR');
-  if (isPlaceholder) {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey.includes('PASTE_YOUR')) {
     document.getElementById('config-banner').classList.remove('hidden');
     document.body.classList.add('has-banner');
   }
@@ -377,10 +383,7 @@
 
 /* =================== AUTH GUARD =================== */
 _auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.replace('ns-admin-login.html');
-    return;
-  }
+  if (!user) { window.location.replace('ns-admin-login.html'); return; }
   document.getElementById('user-name').textContent   = user.email.split('@')[0];
   document.getElementById('user-avatar').textContent = user.email[0].toUpperCase();
   init();
@@ -390,10 +393,11 @@ _auth.onAuthStateChanged(user => {
 async function init() {
   try {
     await renderDashboard();
-    await refreshUnreadBadge();
+    refreshUnreadBadge();
     logActivity('Admin session started');
   } catch (e) {
-    showError('panel-dashboard', 'Could not load dashboard data. Check your Firebase configuration.', e);
+    // FIX: correct element id (was 'panel-dashboard' which made getElementById look for 'panel-panel-dashboard')
+    showError('dashboard', 'Could not load dashboard. Check your Firebase connection.', e);
   }
 }
 
@@ -403,64 +407,64 @@ function toast(msg, type = 'success') {
   el.textContent = msg;
   el.className = `admin-toast show ${type}`;
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 3500);
+  el._t = setTimeout(() => el.classList.remove('show'), 4000);
 }
 
-/* =================== ERROR DISPLAY =================== */
+/* =================== ERROR DISPLAY (in panel) =================== */
 function showError(panelId, message, err) {
-  const panel = document.getElementById(`panel-${panelId}`);
-  if (!panel) return;
-  const existing = panel.querySelector('.panel-error');
-  if (existing) existing.remove();
+  // panelId should be e.g. 'dashboard' — we prepend 'panel-' to get the element id
+  const panel = document.getElementById('panel-' + panelId);
+  if (!panel) { console.error('[showError] panel not found:', panelId, err); return; }
+  panel.querySelectorAll('.panel-error').forEach(el => el.remove());
   const box = document.createElement('div');
   box.className = 'panel-error';
-  box.innerHTML = `<strong>⚠️ ${message}</strong>${err ? `<code style="font-size:.78rem;display:block;margin-top:.5rem;opacity:.7;">${err.message || err}</code>` : ''}`;
-  panel.insertBefore(box, panel.querySelector('.content-card, .settings-section, .stats-grid, #inquiries-list'));
-  console.error(`[${panelId}]`, err);
+  box.innerHTML = `<strong>⚠️ ${esc(message)}</strong>`
+    + (err ? `<code style="font-size:.75rem;display:block;margin-top:.5rem;opacity:.75;word-break:break-all;">${esc(err.message || String(err))}</code>` : '');
+  const anchor = panel.querySelector('.content-card, .settings-section, .stats-grid, #inquiries-list, form');
+  if (anchor) panel.insertBefore(box, anchor);
+  else panel.prepend(box);
+  console.error(`[panel-${panelId}]`, err);
+}
+
+/* =================== MODAL ERROR =================== */
+function showModalError(msg) {
+  const body = document.getElementById('modal-body');
+  body.querySelectorAll('.modal-inner-error').forEach(el => el.remove());
+  const box = document.createElement('div');
+  box.className = 'modal-inner-error panel-error';
+  box.style.cssText = 'margin-bottom:1rem;';
+  box.innerHTML = `⚠️ ${esc(msg)}`;
+  body.prepend(box);
 }
 
 /* =================== SIDEBAR =================== */
 document.getElementById('sidebar-toggle').addEventListener('click', openSidebar);
 document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
-
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebar-overlay').style.display = 'block';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').style.display = 'none';
-}
+function openSidebar()  { document.getElementById('sidebar').classList.add('open');    document.getElementById('sidebar-overlay').style.display = 'block'; }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
 
 /* =================== PANEL ROUTER =================== */
 const PANEL_META = {
-  dashboard:    { title: 'Dashboard',           sub: "Welcome back — here's what's happening" },
-  services:     { title: 'Services & Pricing',  sub: 'Manage services shown on the website' },
-  portfolio:    { title: 'Portfolio',           sub: 'Manage your project gallery' },
-  blog:         { title: 'Blog Articles',       sub: 'Write, edit and publish articles' },
-  testimonials: { title: 'Testimonials',        sub: 'Manage client reviews' },
-  team:         { title: 'Team Members',        sub: 'Manage team profiles on the About page' },
-  inquiries:    { title: 'Client Inquiries',    sub: 'View and manage all client messages' },
-  settings:     { title: 'Site Settings',       sub: 'Update contact info, social links, hours' },
-  security:     { title: 'Security',            sub: 'Manage admin credentials' }
+  dashboard:    { title: 'Dashboard',          sub: "Welcome back — here's what's happening" },
+  services:     { title: 'Services & Pricing', sub: 'Manage services shown on the website' },
+  portfolio:    { title: 'Portfolio',          sub: 'Manage your project gallery' },
+  blog:         { title: 'Blog Articles',      sub: 'Write, edit and publish articles' },
+  testimonials: { title: 'Testimonials',       sub: 'Manage client reviews' },
+  team:         { title: 'Team Members',       sub: 'Manage team profiles on the About page' },
+  inquiries:    { title: 'Client Inquiries',   sub: 'View and manage all client messages' },
+  settings:     { title: 'Site Settings',      sub: 'Update contact info, social links, hours' },
+  security:     { title: 'Security',           sub: 'Manage admin credentials' }
 };
-
 const PANEL_RENDERERS = {
-  dashboard:    () => renderDashboard(),
-  services:     () => renderServices(),
-  portfolio:    () => renderPortfolioAdmin(),
-  blog:         () => renderBlogAdmin(),
-  testimonials: () => renderTestimonialsAdmin(),
-  team:         () => renderTeamAdmin(),
-  inquiries:    () => renderInquiries(_inqFilter),
-  settings:     () => populateSettings(),
-  security:     () => {}
+  dashboard: renderDashboard, services: renderServices, portfolio: renderPortfolioAdmin,
+  blog: renderBlogAdmin, testimonials: renderTestimonialsAdmin, team: renderTeamAdmin,
+  inquiries: () => renderInquiries(_inqFilter), settings: populateSettings, security: () => {}
 };
 
 function switchPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-  const panel = document.getElementById(`panel-${id}`);
+  const panel = document.getElementById('panel-' + id);
   if (!panel) return;
   panel.classList.add('active');
   document.querySelector(`[data-panel="${id}"]`)?.classList.add('active');
@@ -469,14 +473,13 @@ function switchPanel(id) {
   closeSidebar();
   PANEL_RENDERERS[id]?.();
 }
-
 document.querySelectorAll('.sidebar-link').forEach(btn =>
   btn.addEventListener('click', () => switchPanel(btn.dataset.panel))
 );
 
 /* =================== LOGOUT =================== */
 document.getElementById('logout-btn').addEventListener('click', async () => {
-  try { await NamuDB.signOut(); } catch (e) {}
+  try { await NamuDB.signOut(); } catch (_) {}
   window.location.replace('ns-admin-login.html');
 });
 
@@ -485,44 +488,45 @@ let _modalSaveFn    = null;
 let _modalSaveLabel = 'Save';
 
 function openModal(title, bodyHtml, saveFn, saveLabel = 'Save') {
-  document.getElementById('modal-title').textContent    = title;
-  document.getElementById('modal-body').innerHTML       = bodyHtml;
-  const saveBtn = document.getElementById('modal-save-btn');
-  saveBtn.textContent = saveLabel;
-  saveBtn.disabled    = false;
-  document.getElementById('admin-modal').classList.add('open');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = bodyHtml;
+  // FIX: always fully reset the save button state
+  const btn = document.getElementById('modal-save-btn');
+  btn.textContent = saveLabel;
+  btn.disabled    = false;
   _modalSaveFn    = saveFn;
   _modalSaveLabel = saveLabel;
-
-  // Focus first input
-  setTimeout(() => {
-    const first = document.querySelector('#modal-body input, #modal-body textarea, #modal-body select');
-    first?.focus();
-  }, 100);
+  document.getElementById('admin-modal').classList.add('open');
+  // Focus first field after render
+  setTimeout(() => document.querySelector('#modal-body input, #modal-body textarea, #modal-body select')?.focus(), 120);
 }
 
 function closeModal() {
   document.getElementById('admin-modal').classList.remove('open');
-  _modalSaveFn = null;
+  // FIX: reset state fully so stale save fn never fires
+  _modalSaveFn    = null;
+  _modalSaveLabel = 'Save';
 }
 
 function handleModalOverlayClick(e) {
   if (e.target === document.getElementById('admin-modal')) closeModal();
 }
 
-// Called by the Save button in the modal footer
 document.getElementById('modal-save-btn').addEventListener('click', async () => {
   if (!_modalSaveFn) return;
-  const btn = document.getElementById('modal-save-btn');
+  const btn   = document.getElementById('modal-save-btn');
   const label = _modalSaveLabel;
   btn.disabled = true;
   btn.textContent = 'Saving…';
+  // Clear any previous modal error
+  document.getElementById('modal-body').querySelectorAll('.modal-inner-error').forEach(el => el.remove());
   try {
     await _modalSaveFn();
-    // Save fn calls closeModal() on success, so if we get here the modal may be closed.
+    // On success saveFn calls closeModal() — button resets on next openModal()
   } catch (e) {
-    toast(e.message || 'An error occurred.', 'error');
-    // Restore button so user can retry
+    // FIX: show error INSIDE modal so user can see it and retry
+    showModalError(e.message || 'An unexpected error occurred. Check your Firebase connection.');
+    toast(e.message || 'Save failed.', 'error');
     btn.disabled    = false;
     btn.textContent = label;
   }
@@ -530,15 +534,15 @@ document.getElementById('modal-save-btn').addEventListener('click', async () => 
 
 /* =================== CONFIRM DIALOG =================== */
 function showConfirm(title, msg, onOk, icon = '⚠️', okLabel = 'Delete') {
-  document.getElementById('confirm-title').textContent     = title;
-  document.getElementById('confirm-msg').textContent       = msg;
-  document.getElementById('confirm-icon').textContent      = icon;
-  document.getElementById('confirm-ok-btn').textContent    = okLabel;
+  document.getElementById('confirm-title').textContent  = title;
+  document.getElementById('confirm-msg').textContent    = msg;
+  document.getElementById('confirm-icon').textContent   = icon;
+  document.getElementById('confirm-ok-btn').textContent = okLabel;
   document.getElementById('confirm-overlay').classList.add('open');
   document.getElementById('confirm-ok-btn').onclick = async () => {
     document.getElementById('confirm-overlay').classList.remove('open');
     try { await onOk(); }
-    catch (e) { toast(e.message || 'Error.', 'error'); }
+    catch (e) { toast(e.message || 'Operation failed.', 'error'); console.error(e); }
   };
 }
 function handleConfirmOverlayClick(e) {
@@ -556,20 +560,22 @@ function logActivity(text) {
     <div class="activity-item">
       <div class="activity-dot"></div>
       <div>
-        <div class="activity-text">${a.text}</div>
+        <div class="activity-text">${esc(a.text)}</div>
         <div class="activity-time">${a.time.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</div>
       </div>
     </div>`).join('');
 }
 
 /* =================== FORM HELPERS =================== */
-// Reads all named inputs from the modal body safely.
-// Uses document.getElementById('modal-body') which is always correct.
+// FIX: getModalField now handles all input types correctly.
+// For textarea, reads .value directly (no trim — preserves newlines in blog content).
 function getModalField(name) {
   const el = document.getElementById('modal-body').querySelector(`[name="${name}"]`);
   if (!el) return '';
-  if (el.type === 'checkbox') return el.checked;
-  return el.value.trim ? el.value.trim() : el.value;
+  if (el.type === 'checkbox')   return el.checked;
+  if (el.tagName === 'TEXTAREA') return el.value;          // no trim — preserve content
+  if (el.tagName === 'SELECT')   return el.value;
+  return el.value ? el.value.trim() : '';
 }
 
 /* =================== UNREAD BADGE =================== */
@@ -578,36 +584,50 @@ async function refreshUnreadBadge() {
     const count = await NamuDB.getUnreadCount();
     const badge = document.getElementById('inquiries-badge');
     if (count > 0) { badge.textContent = count; badge.style.display = ''; }
-    else badge.style.display = 'none';
-  } catch (e) { /* non-critical */ }
+    else           badge.style.display = 'none';
+  } catch (_) {}
+}
+
+/* =================== LOADING HELPER =================== */
+function showTableLoading(tbodyId, cols) {
+  const el = document.getElementById(tbodyId);
+  if (el) el.innerHTML = `<tr><td colspan="${cols}"><div class="panel-loading"><div class="spinner"></div></div></td></tr>`;
+}
+function showTableError(tbodyId, cols, err) {
+  const el = document.getElementById(tbodyId);
+  if (el) el.innerHTML = `<tr><td colspan="${cols}">
+    <div class="panel-error"><strong>Could not load data.</strong>
+    <code style="font-size:.75rem;display:block;margin-top:.5rem;">${esc(err.message || String(err))}</code></div></td></tr>`;
+  console.error(err);
+}
+// FIX: safe wrapper for all async onclick handlers — shows visible error if anything goes wrong
+async function safeCall(fn) {
+  try { await fn(); }
+  catch (e) {
+    toast((e.message || 'An error occurred. Check browser console for details.'), 'error');
+    console.error('[safeCall]', e);
+  }
 }
 
 /* =================== DASHBOARD =================== */
 async function renderDashboard() {
-  document.getElementById('dash-recent-inquiries').innerHTML =
-    '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>';
-
+  const rEl = document.getElementById('dash-recent-inquiries');
+  rEl.innerHTML = '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>';
   try {
     const [svcs, portAll, blogAll, inqs] = await Promise.all([
-      NamuDB.getServices(),
-      NamuDB.getPortfolio('all'),
-      NamuDB.getBlogPosts(false),
-      NamuDB.getInquiries()
+      NamuDB.getServices(), NamuDB.getPortfolio('all'),
+      NamuDB.getBlogPosts(false), NamuDB.getInquiries()
     ]);
-
     document.getElementById('s-services').textContent  = svcs.length;
     document.getElementById('s-portfolio').textContent = portAll.length;
     document.getElementById('s-blog').textContent      = blogAll.length;
     document.getElementById('s-inquiries').textContent = inqs.length;
-
     const recent = inqs.slice(0, 5);
-    const rEl    = document.getElementById('dash-recent-inquiries');
     if (!recent.length) {
       rEl.innerHTML = '<div class="admin-empty"><div class="empty-icon">📭</div><p>No inquiries yet.</p></div>';
     } else {
       rEl.innerHTML = recent.map(i => `
-        <div class="inquiry-card ${i.read ? 'read' : 'unread'}" style="cursor:pointer;"
-             onclick="switchPanel('inquiries')">
+        <div class="inquiry-card ${i.read ? 'read' : 'unread'}" style="cursor:pointer;" onclick="switchPanel('inquiries')">
           <div class="inquiry-meta">
             <span class="inquiry-name">${esc(i.name || 'Anonymous')}</span>
             <span class="badge badge-${i.status || 'new'}">${i.status || 'new'}</span>
@@ -616,44 +636,40 @@ async function renderDashboard() {
           <div class="inquiry-excerpt">${esc((i.message || i.service || '(No message)').substring(0, 100))}</div>
         </div>`).join('');
     }
-
-    logActivity(`Dashboard loaded — ${inqs.filter(i => !i.read).length} unread`);
+    logActivity(`Dashboard refreshed — ${inqs.filter(i => !i.read).length} unread`);
   } catch (e) {
-    showError('dashboard', 'Could not load dashboard data. Check your Firebase connection.', e);
+    rEl.innerHTML = `<div class="panel-error"><strong>Could not load data.</strong><code>${esc(e.message)}</code></div>`;
+    throw e; // propagate so init() can show panel-level error
   }
 }
 
 /* =================== SERVICES =================== */
 async function renderServices() {
-  const tbody = document.getElementById('services-tbody');
-  tbody.innerHTML = '<tr><td colspan="6"><div class="panel-loading"><div class="spinner"></div></div></td></tr>';
+  showTableLoading('services-tbody', 6);
   try {
     const items = await NamuDB.getServices();
+    const tbody = document.getElementById('services-tbody');
     if (!items.length) {
       tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><div class="empty-icon">🛎️</div><p>No services yet. Click "+ Add Service" to create one.</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = items.map(s => `
       <tr>
-        <td><img src="${esc(s.image)}" class="table-img" alt=""
-             onerror="this.src='https://picsum.photos/seed/svc/80/60'"></td>
+        <td><img src="${esc(s.image)}" class="table-img" alt="" onerror="this.src='https://picsum.photos/seed/svc/80/60'"></td>
         <td><strong>${esc(s.title)}</strong></td>
         <td><strong>${esc(s.price)}</strong></td>
         <td>${esc(s.duration || '—')}</td>
         <td>${s.featured ? '<span class="badge badge-featured">Yes</span>' : '—'}</td>
         <td><div class="actions-cell">
-          <button class="action-btn edit" onclick="editService('${s.id}')">✏️ Edit</button>
+          <button class="action-btn edit"   onclick="safeCall(()=>editService('${s.id}'))">✏️ Edit</button>
           <button class="action-btn delete" onclick="confirmDeleteService('${s.id}','${escAttr(s.title)}')">🗑️ Delete</button>
         </div></td>
       </tr>`).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="panel-error"><strong>Could not load services.</strong><code>${e.message}</code></div></td></tr>`;
-  }
+  } catch (e) { showTableError('services-tbody', 6, e); }
 }
 
 function serviceForm(s = {}) {
-  return `
-  <div>
+  return `<div>
     <div class="admin-form-row">
       <div class="form-group"><label class="form-label">Title *</label>
         <input name="title" class="form-input" value="${escAttr(s.title||'')}" placeholder="e.g. Interior Design Consultation" required></div>
@@ -666,27 +682,19 @@ function serviceForm(s = {}) {
       <div class="form-group"><label class="form-label">Icon (emoji)</label>
         <input name="icon" class="form-input" value="${escAttr(s.icon||'🏡')}" placeholder="🏡"></div>
     </div>
-    <div class="form-group"><label class="form-label">Short Excerpt (shown on cards)</label>
-      <input name="excerpt" class="form-input" value="${escAttr(s.excerpt||'')}" placeholder="A brief description shown on the services card"></div>
+    <div class="form-group"><label class="form-label">Short Excerpt</label>
+      <input name="excerpt" class="form-input" value="${escAttr(s.excerpt||'')}" placeholder="Brief description shown on card"></div>
     <div class="form-group"><label class="form-label">Full Description</label>
-      <textarea name="description" class="form-textarea" rows="4" placeholder="Full service description…">${esc(s.description||'')}</textarea></div>
-    <div class="form-group">
-      <label class="form-label">Image URL</label>
-      <input name="image" class="form-input" value="${escAttr(s.image||'')}"
-             placeholder="https://…" oninput="previewImg(this,'svc-img-preview')">
-      <img id="svc-img-preview" class="img-preview" src="${escAttr(s.image||'')}"
-           style="${s.image ? 'display:block;' : 'display:none;'}"
-           onerror="this.style.display='none'" alt="Preview">
-    </div>
+      <textarea name="description" class="form-textarea" rows="4">${escTextarea(s.description)}</textarea></div>
+    <div class="form-group"><label class="form-label">Image URL</label>
+      <input name="image" class="form-input" value="${escAttr(s.image||'')}" placeholder="https://…" oninput="previewImg(this,'svc-img-preview')">
+      <img id="svc-img-preview" class="img-preview" src="${escAttr(s.image||'')}" style="${s.image?'display:block':'display:none'}" onerror="this.style.display='none'" alt="Preview"></div>
     <div class="admin-form-row">
       <div class="form-group"><label class="form-label">Display Order</label>
         <input name="order" type="number" min="1" class="form-input" value="${s.order||1}"></div>
       <div class="form-group" style="padding-top:1.8rem;">
         <div class="toggle-wrap">
-          <label class="toggle-switch">
-            <input type="checkbox" name="featured" ${s.featured ? 'checked' : ''}>
-            <span class="toggle-slider"></span>
-          </label>
+          <label class="toggle-switch"><input type="checkbox" name="featured" ${s.featured?'checked':''}><span class="toggle-slider"></span></label>
           <span class="toggle-label">Featured on homepage</span>
         </div>
       </div>
@@ -695,7 +703,7 @@ function serviceForm(s = {}) {
 }
 
 function collectServiceData() {
-  const data = {
+  const d = {
     title:       getModalField('title'),
     price:       getModalField('price'),
     duration:    getModalField('duration'),
@@ -706,8 +714,9 @@ function collectServiceData() {
     order:       parseInt(getModalField('order')) || 1,
     featured:    getModalField('featured')
   };
-  if (!data.title || !data.price) throw new Error('Title and Price are required.');
-  return data;
+  if (!d.title.trim()) throw new Error('Title is required.');
+  if (!d.price.trim()) throw new Error('Price is required.');
+  return d;
 }
 
 function openServiceModal() {
@@ -717,65 +726,65 @@ function openServiceModal() {
     toast('✅ Service added!');
     closeModal();
     await renderServices();
-    logActivity(`Added service: ${data.title}`);
+    logActivity('Added service: ' + data.title);
   });
 }
 
 async function editService(id) {
+  // Show loading state in modal while fetching
+  openModal('Edit Service', '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>', null, 'Save Changes');
   const snap = await NamuDB._db.collection('services').doc(id).get();
-  if (!snap.exists) { toast('Service not found.', 'error'); return; }
+  if (!snap.exists) { closeModal(); toast('Service not found.', 'error'); return; }
   const s = { id, ...snap.data() };
-  openModal('Edit Service', serviceForm(s), async () => {
+  // Now replace modal content with the form
+  document.getElementById('modal-body').innerHTML = serviceForm(s);
+  _modalSaveFn = async () => {
     const data = collectServiceData();
     await NamuDB.updateService(id, data);
     toast('✅ Service updated!');
     closeModal();
     await renderServices();
-    logActivity(`Updated service: ${data.title}`);
-  }, 'Save Changes');
+    logActivity('Updated service: ' + data.title);
+  };
 }
 
 function confirmDeleteService(id, title) {
-  showConfirm('Delete Service?', `"${title}" will be permanently removed from the website.`, async () => {
+  showConfirm('Delete Service?', `"${title}" will be permanently removed.`, async () => {
     await NamuDB.deleteService(id);
     toast('Service deleted.', 'info');
     await renderServices();
-    logActivity(`Deleted service: ${title}`);
+    logActivity('Deleted service: ' + title);
   });
 }
 
 /* =================== PORTFOLIO =================== */
 async function renderPortfolioAdmin() {
-  const tbody = document.getElementById('portfolio-tbody');
-  tbody.innerHTML = '<tr><td colspan="7"><div class="panel-loading"><div class="spinner"></div></div></td></tr>';
+  showTableLoading('portfolio-tbody', 7);
   try {
     const items = await NamuDB.getPortfolio('all');
+    const tbody = document.getElementById('portfolio-tbody');
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><div class="empty-icon">🖼️</div><p>No projects yet. Click "+ Add Project" to create one.</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="admin-empty"><div class="empty-icon">🖼️</div><p>No projects yet. Click "+ Add Project".</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = items.map(p => `
       <tr>
-        <td><img src="${esc(p.image)}" class="table-img" alt=""
-             onerror="this.src='https://picsum.photos/seed/proj/80/60'"></td>
+        <td><img src="${esc(p.image)}" class="table-img" alt="" onerror="this.src='https://picsum.photos/seed/proj/80/60'"></td>
         <td><strong>${esc(p.title)}</strong></td>
         <td><span class="badge" style="background:var(--sand-light);color:var(--sienna);">${esc(p.category||'—')}</span></td>
-        <td>${p.year || '—'}</td>
-        <td>${esc(p.location || '—')}</td>
+        <td>${p.year||'—'}</td>
+        <td>${esc(p.location||'—')}</td>
         <td>${p.featured ? '<span class="badge badge-featured">Yes</span>' : '—'}</td>
         <td><div class="actions-cell">
-          <button class="action-btn edit" onclick="editPortfolio('${p.id}')">✏️ Edit</button>
+          <button class="action-btn edit"   onclick="safeCall(()=>editPortfolio('${p.id}'))">✏️ Edit</button>
           <button class="action-btn delete" onclick="confirmDeletePortfolio('${p.id}','${escAttr(p.title)}')">🗑️ Delete</button>
         </div></td>
       </tr>`).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="panel-error"><strong>Could not load portfolio.</strong><code>${e.message}</code></div></td></tr>`;
-  }
+  } catch (e) { showTableError('portfolio-tbody', 7, e); }
 }
 
 function portfolioForm(p = {}) {
-  return `
-  <div>
+  return `<div>
     <div class="form-group"><label class="form-label">Title *</label>
       <input name="title" class="form-input" value="${escAttr(p.title||'')}" placeholder="e.g. The Serene Apartment — Kilimani" required></div>
     <div class="admin-form-row">
@@ -784,34 +793,26 @@ function portfolioForm(p = {}) {
           <option value="residential" ${p.category==='residential'?'selected':''}>Residential</option>
           <option value="commercial"  ${p.category==='commercial' ?'selected':''}>Commercial</option>
           <option value="office"      ${p.category==='office'     ?'selected':''}>Office</option>
-        </select>
-      </div>
+        </select></div>
       <div class="form-group"><label class="form-label">Year</label>
         <input name="year" type="number" min="2000" max="2099" class="form-input" value="${p.year||new Date().getFullYear()}"></div>
     </div>
     <div class="form-group"><label class="form-label">Location</label>
       <input name="location" class="form-input" value="${escAttr(p.location||'')}" placeholder="e.g. Kilimani, Nairobi"></div>
     <div class="form-group"><label class="form-label">Description</label>
-      <textarea name="description" class="form-textarea" rows="3" placeholder="Describe the project…">${esc(p.description||'')}</textarea></div>
-    <div class="form-group">
-      <label class="form-label">Image URL</label>
-      <input name="image" class="form-input" value="${escAttr(p.image||'')}"
-             placeholder="https://…" oninput="previewImg(this,'port-img-preview')">
-      <img id="port-img-preview" class="img-preview" src="${escAttr(p.image||'')}"
-           style="${p.image?'display:block;':'display:none;'}" onerror="this.style.display='none'" alt="Preview">
-    </div>
+      <textarea name="description" class="form-textarea" rows="3">${escTextarea(p.description)}</textarea></div>
+    <div class="form-group"><label class="form-label">Image URL</label>
+      <input name="image" class="form-input" value="${escAttr(p.image||'')}" placeholder="https://…" oninput="previewImg(this,'port-img-preview')">
+      <img id="port-img-preview" class="img-preview" src="${escAttr(p.image||'')}" style="${p.image?'display:block':'display:none'}" onerror="this.style.display='none'" alt="Preview"></div>
     <div class="toggle-wrap" style="padding:.5rem 0;">
-      <label class="toggle-switch">
-        <input type="checkbox" name="featured" ${p.featured ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
+      <label class="toggle-switch"><input type="checkbox" name="featured" ${p.featured?'checked':''}><span class="toggle-slider"></span></label>
       <span class="toggle-label">Featured on homepage</span>
     </div>
   </div>`;
 }
 
 function collectPortfolioData() {
-  const data = {
+  const d = {
     title:       getModalField('title'),
     category:    getModalField('category') || 'residential',
     year:        parseInt(getModalField('year')) || new Date().getFullYear(),
@@ -820,8 +821,8 @@ function collectPortfolioData() {
     image:       getModalField('image'),
     featured:    getModalField('featured')
   };
-  if (!data.title) throw new Error('Title is required.');
-  return data;
+  if (!d.title.trim()) throw new Error('Title is required.');
+  return d;
 }
 
 function openPortfolioModal() {
@@ -831,22 +832,24 @@ function openPortfolioModal() {
     toast('✅ Project added!');
     closeModal();
     await renderPortfolioAdmin();
-    logActivity(`Added project: ${data.title}`);
+    logActivity('Added project: ' + data.title);
   });
 }
 
 async function editPortfolio(id) {
+  openModal('Edit Project', '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>', null, 'Save Changes');
   const snap = await NamuDB._db.collection('portfolio').doc(id).get();
-  if (!snap.exists) { toast('Project not found.', 'error'); return; }
+  if (!snap.exists) { closeModal(); toast('Project not found.', 'error'); return; }
   const p = { id, ...snap.data() };
-  openModal('Edit Project', portfolioForm(p), async () => {
+  document.getElementById('modal-body').innerHTML = portfolioForm(p);
+  _modalSaveFn = async () => {
     const data = collectPortfolioData();
     await NamuDB.updatePortfolioItem(id, data);
     toast('✅ Project updated!');
     closeModal();
     await renderPortfolioAdmin();
-    logActivity(`Updated project: ${data.title}`);
-  }, 'Save Changes');
+    logActivity('Updated project: ' + data.title);
+  };
 }
 
 function confirmDeletePortfolio(id, title) {
@@ -854,45 +857,44 @@ function confirmDeletePortfolio(id, title) {
     await NamuDB.deletePortfolioItem(id);
     toast('Project deleted.', 'info');
     await renderPortfolioAdmin();
-    logActivity(`Deleted project: ${title}`);
+    logActivity('Deleted project: ' + title);
   });
 }
 
 /* =================== BLOG =================== */
 async function renderBlogAdmin() {
-  const tbody = document.getElementById('blog-tbody');
-  tbody.innerHTML = '<tr><td colspan="6"><div class="panel-loading"><div class="spinner"></div></div></td></tr>';
+  showTableLoading('blog-tbody', 6);
   try {
     const posts = await NamuDB.getBlogPosts(false);
+    const tbody = document.getElementById('blog-tbody');
     if (!posts.length) {
-      tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><div class="empty-icon">✍️</div><p>No articles yet. Click "+ New Article" to write one.</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><div class="empty-icon">✍️</div><p>No articles yet. Click "+ New Article".</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = posts.map(p => `
       <tr>
         <td><strong>${esc(p.title)}</strong></td>
-        <td>${esc(p.author || '—')}</td>
+        <td>${esc(p.author||'—')}</td>
         <td>${NamuDB.formatDate(p.date)}</td>
-        <td>${esc(p.category || '—')}</td>
-        <td><span class="badge badge-${p.published?'published':'draft'}">${p.published ? 'Published' : 'Draft'}</span></td>
+        <td>${esc(p.category||'—')}</td>
+        <td><span class="badge badge-${p.published?'published':'draft'}">${p.published?'Published':'Draft'}</span></td>
         <td><div class="actions-cell">
-          <button class="action-btn edit" onclick="editBlog('${p.id}')">✏️ Edit</button>
+          <button class="action-btn edit"    onclick="safeCall(()=>editBlog('${p.id}'))">✏️ Edit</button>
           <button class="action-btn ${p.published?'view':'publish'}"
-                  onclick="togglePublish('${p.id}',${!!p.published})">
+                  onclick="safeCall(()=>togglePublish('${p.id}',${!!p.published}))">
             ${p.published ? '⏸ Unpublish' : '▶ Publish'}
           </button>
-          <button class="action-btn delete" onclick="confirmDeleteBlog('${p.id}','${escAttr(p.title)}')">🗑️</button>
+          <button class="action-btn delete"  onclick="confirmDeleteBlog('${p.id}','${escAttr(p.title)}')">🗑️</button>
         </div></td>
       </tr>`).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="panel-error"><strong>Could not load articles.</strong><code>${e.message}</code></div></td></tr>`;
-  }
+  } catch (e) { showTableError('blog-tbody', 6, e); }
 }
 
 function blogForm(p = {}) {
-  // Store content raw — textarea handles special chars natively, no need for encoding
-  return `
-  <div>
+  // FIX: blog category options now have value attributes
+  const cats = ['Design Tips','Design Trends','Behind the Scenes','Client Stories'];
+  const catOpts = cats.map(c => `<option value="${escAttr(c)}" ${p.category===c?'selected':''}>${esc(c)}</option>`).join('');
+  return `<div>
     <div class="form-group"><label class="form-label">Title *</label>
       <input name="title" class="form-input" value="${escAttr(p.title||'')}" placeholder="Article title" required></div>
     <div class="admin-form-row">
@@ -903,43 +905,35 @@ function blogForm(p = {}) {
     </div>
     <div class="admin-form-row">
       <div class="form-group"><label class="form-label">Category</label>
-        <select name="category" class="form-select">
-          <option ${p.category==='Design Tips'    ?'selected':''}>Design Tips</option>
-          <option ${p.category==='Design Trends'  ?'selected':''}>Design Trends</option>
-          <option ${p.category==='Behind the Scenes'?'selected':''}>Behind the Scenes</option>
-          <option ${p.category==='Client Stories' ?'selected':''}>Client Stories</option>
-        </select>
-      </div>
+        <select name="category" class="form-select">${catOpts}</select></div>
       <div class="form-group"><label class="form-label">Cover Image URL</label>
-        <input name="image" class="form-input" value="${escAttr(p.image||'')}" placeholder="https://…"></div>
+        <input name="image" class="form-input" value="${escAttr(p.image||'')}" placeholder="https://…" oninput="previewImg(this,'blog-img-preview')">
+        <img id="blog-img-preview" class="img-preview" src="${escAttr(p.image||'')}" style="${p.image?'display:block':'display:none'}" onerror="this.style.display='none'" alt="Preview"></div>
     </div>
-    <div class="form-group"><label class="form-label">Excerpt (shown on blog card)</label>
-      <textarea name="excerpt" class="form-textarea" rows="2" placeholder="Short description shown in blog listing…">${esc(p.excerpt||'')}</textarea></div>
-    <div class="form-group"><label class="form-label">Full Content (HTML is supported)</label>
-      <textarea name="content" class="form-textarea" rows="10" placeholder="Write the full article here. HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt; are supported…">${esc(p.content||'')}</textarea></div>
+    <div class="form-group"><label class="form-label">Excerpt (shown on card)</label>
+      <textarea name="excerpt" class="form-textarea" rows="2">${escTextarea(p.excerpt)}</textarea></div>
+    <div class="form-group"><label class="form-label">Full Content (HTML supported — use &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt; tags)</label>
+      <textarea name="content" class="form-textarea" rows="10" placeholder="Write the article here…">${escTextarea(p.content)}</textarea></div>
     <div class="toggle-wrap" style="padding:.5rem 0;">
-      <label class="toggle-switch">
-        <input type="checkbox" name="published" ${p.published ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
+      <label class="toggle-switch"><input type="checkbox" name="published" ${p.published?'checked':''}><span class="toggle-slider"></span></label>
       <span class="toggle-label">Published (visible on website)</span>
     </div>
   </div>`;
 }
 
 function collectBlogData() {
-  const data = {
+  const d = {
     title:     getModalField('title'),
     author:    getModalField('author') || 'Medina Wabomba',
     date:      getModalField('date') || new Date().toISOString().split('T')[0],
     category:  getModalField('category'),
     image:     getModalField('image'),
     excerpt:   getModalField('excerpt'),
-    content:   document.getElementById('modal-body').querySelector('[name="content"]')?.value || '',
+    content:   getModalField('content'),   // textarea — full value, no trim
     published: getModalField('published')
   };
-  if (!data.title) throw new Error('Title is required.');
-  return data;
+  if (!d.title.trim()) throw new Error('Title is required.');
+  return d;
 }
 
 function openBlogModal() {
@@ -949,29 +943,31 @@ function openBlogModal() {
     toast('✅ Article created!');
     closeModal();
     await renderBlogAdmin();
-    logActivity(`Created article: ${data.title}`);
+    logActivity('Created article: ' + data.title);
   });
 }
 
 async function editBlog(id) {
+  openModal('Edit Article', '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>', null, 'Save Changes');
   const snap = await NamuDB._db.collection('blog').doc(id).get();
-  if (!snap.exists) { toast('Article not found.', 'error'); return; }
+  if (!snap.exists) { closeModal(); toast('Article not found.', 'error'); return; }
   const p = { id, ...snap.data() };
-  openModal('Edit Article', blogForm(p), async () => {
+  document.getElementById('modal-body').innerHTML = blogForm(p);
+  _modalSaveFn = async () => {
     const data = collectBlogData();
     await NamuDB.updateBlogPost(id, data);
     toast('✅ Article updated!');
     closeModal();
     await renderBlogAdmin();
-    logActivity(`Updated article: ${data.title}`);
-  }, 'Save Changes');
+    logActivity('Updated article: ' + data.title);
+  };
 }
 
 async function togglePublish(id, currentlyPublished) {
   await NamuDB.updateBlogPost(id, { published: !currentlyPublished });
   toast(currentlyPublished ? 'Article unpublished.' : '✅ Article published!');
   await renderBlogAdmin();
-  logActivity(`${currentlyPublished ? 'Unpublished' : 'Published'} article`);
+  logActivity((currentlyPublished ? 'Unpublished' : 'Published') + ' article');
 }
 
 function confirmDeleteBlog(id, title) {
@@ -979,16 +975,16 @@ function confirmDeleteBlog(id, title) {
     await NamuDB.deleteBlogPost(id);
     toast('Article deleted.', 'info');
     await renderBlogAdmin();
-    logActivity(`Deleted article: ${title}`);
+    logActivity('Deleted article: ' + title);
   });
 }
 
 /* =================== TESTIMONIALS =================== */
 async function renderTestimonialsAdmin() {
-  const tbody = document.getElementById('testimonials-tbody');
-  tbody.innerHTML = '<tr><td colspan="6"><div class="panel-loading"><div class="spinner"></div></div></td></tr>';
+  showTableLoading('testimonials-tbody', 6);
   try {
     const items = await NamuDB.getTestimonials(false);
+    const tbody = document.getElementById('testimonials-tbody');
     if (!items.length) {
       tbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty"><div class="empty-icon">💬</div><p>No testimonials yet.</p></div></td></tr>';
       return;
@@ -996,23 +992,20 @@ async function renderTestimonialsAdmin() {
     tbody.innerHTML = items.map(t => `
       <tr>
         <td><strong>${esc(t.name)}</strong></td>
-        <td>${esc(t.role || '—')}</td>
+        <td>${esc(t.role||'—')}</td>
         <td style="max-width:200px;white-space:normal;">${esc((t.quote||'').substring(0,70))}…</td>
         <td>${'★'.repeat(Math.min(t.rating||5,5))}</td>
         <td>${t.active ? '<span class="badge badge-published">Active</span>' : '<span class="badge badge-draft">Hidden</span>'}</td>
         <td><div class="actions-cell">
-          <button class="action-btn edit" onclick="editTestimonial('${t.id}')">✏️ Edit</button>
+          <button class="action-btn edit"   onclick="safeCall(()=>editTestimonial('${t.id}'))">✏️ Edit</button>
           <button class="action-btn delete" onclick="confirmDeleteTestimonial('${t.id}','${escAttr(t.name)}')">🗑️ Delete</button>
         </div></td>
       </tr>`).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="panel-error"><strong>Could not load testimonials.</strong><code>${e.message}</code></div></td></tr>`;
-  }
+  } catch (e) { showTableError('testimonials-tbody', 6, e); }
 }
 
 function testimonialForm(t = {}) {
-  return `
-  <div>
+  return `<div>
     <div class="admin-form-row">
       <div class="form-group"><label class="form-label">Client Name *</label>
         <input name="name" class="form-input" value="${escAttr(t.name||'')}" required></div>
@@ -1020,39 +1013,34 @@ function testimonialForm(t = {}) {
         <input name="role" class="form-input" value="${escAttr(t.role||'')}" placeholder="e.g. Homeowner, Kilimani"></div>
     </div>
     <div class="form-group"><label class="form-label">Quote *</label>
-      <textarea name="quote" class="form-textarea" rows="3" placeholder="Client's testimonial…" required>${esc(t.quote||'')}</textarea></div>
+      <textarea name="quote" class="form-textarea" rows="3" required>${escTextarea(t.quote)}</textarea></div>
     <div class="admin-form-row">
-      <div class="form-group">
-        <label class="form-label">Photo URL</label>
-        <input name="image" class="form-input" value="${escAttr(t.image||'')}"
-               placeholder="https://randomuser.me/api/portraits/…" oninput="previewImg(this,'testi-img-preview')">
-        <img id="testi-img-preview" class="img-preview" src="${escAttr(t.image||'')}"
-             style="${t.image?'display:block;border-radius:50%;':'display:none;'}" onerror="this.style.display='none'" alt="">
-      </div>
+      <div class="form-group"><label class="form-label">Photo URL</label>
+        <input name="image" class="form-input" value="${escAttr(t.image||'')}" placeholder="https://randomuser.me/api/portraits/…"
+               oninput="previewImg(this,'testi-img-preview')">
+        <img id="testi-img-preview" class="img-preview" src="${escAttr(t.image||'')}" style="${t.image?'display:block;border-radius:50%':'display:none'}" onerror="this.style.display='none'" alt=""></div>
       <div class="form-group"><label class="form-label">Rating (1–5)</label>
         <input name="rating" type="number" min="1" max="5" class="form-input" value="${t.rating||5}"></div>
     </div>
     <div class="toggle-wrap" style="padding:.5rem 0;">
-      <label class="toggle-switch">
-        <input type="checkbox" name="active" ${t.active !== false ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
+      <label class="toggle-switch"><input type="checkbox" name="active" ${t.active!==false?'checked':''}><span class="toggle-slider"></span></label>
       <span class="toggle-label">Show on website</span>
     </div>
   </div>`;
 }
 
 function collectTestimonialData() {
-  const data = {
+  const d = {
     name:   getModalField('name'),
     role:   getModalField('role'),
-    quote:  document.getElementById('modal-body').querySelector('[name="quote"]')?.value || '',
+    quote:  getModalField('quote'),
     image:  getModalField('image'),
     rating: parseInt(getModalField('rating')) || 5,
     active: getModalField('active')
   };
-  if (!data.name || !data.quote) throw new Error('Name and Quote are required.');
-  return data;
+  if (!d.name.trim()) throw new Error('Name is required.');
+  if (!d.quote.trim()) throw new Error('Quote is required.');
+  return d;
 }
 
 function openTestimonialModal() {
@@ -1062,22 +1050,24 @@ function openTestimonialModal() {
     toast('✅ Testimonial added!');
     closeModal();
     await renderTestimonialsAdmin();
-    logActivity(`Added testimonial from: ${data.name}`);
+    logActivity('Added testimonial from: ' + data.name);
   });
 }
 
 async function editTestimonial(id) {
+  openModal('Edit Testimonial', '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>', null, 'Save Changes');
   const snap = await NamuDB._db.collection('testimonials').doc(id).get();
-  if (!snap.exists) { toast('Testimonial not found.', 'error'); return; }
+  if (!snap.exists) { closeModal(); toast('Testimonial not found.', 'error'); return; }
   const t = { id, ...snap.data() };
-  openModal('Edit Testimonial', testimonialForm(t), async () => {
+  document.getElementById('modal-body').innerHTML = testimonialForm(t);
+  _modalSaveFn = async () => {
     const data = collectTestimonialData();
     await NamuDB.updateTestimonial(id, data);
     toast('✅ Testimonial updated!');
     closeModal();
     await renderTestimonialsAdmin();
-    logActivity(`Updated testimonial from: ${data.name}`);
-  }, 'Save Changes');
+    logActivity('Updated testimonial from: ' + data.name);
+  };
 }
 
 function confirmDeleteTestimonial(id, name) {
@@ -1085,41 +1075,37 @@ function confirmDeleteTestimonial(id, name) {
     await NamuDB.deleteTestimonial(id);
     toast('Testimonial deleted.', 'info');
     await renderTestimonialsAdmin();
-    logActivity(`Deleted testimonial from: ${name}`);
+    logActivity('Deleted testimonial from: ' + name);
   });
 }
 
 /* =================== TEAM =================== */
 async function renderTeamAdmin() {
-  const tbody = document.getElementById('team-tbody');
-  tbody.innerHTML = '<tr><td colspan="5"><div class="panel-loading"><div class="spinner"></div></div></td></tr>';
+  showTableLoading('team-tbody', 5);
   try {
     const items = await NamuDB.getTeam();
+    const tbody = document.getElementById('team-tbody');
     if (!items.length) {
       tbody.innerHTML = '<tr><td colspan="5"><div class="admin-empty"><div class="empty-icon">👥</div><p>No team members yet.</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = items.map(m => `
       <tr>
-        <td><img src="${esc(m.image)}" class="table-img"
-             style="border-radius:50%;width:48px;height:48px;object-fit:cover;"
+        <td><img src="${esc(m.image)}" class="table-img" style="border-radius:50%;width:48px;height:48px;object-fit:cover;"
              onerror="this.style.background='var(--sand-light)'" alt=""></td>
         <td><strong>${esc(m.name)}</strong></td>
-        <td>${esc(m.role || '—')}</td>
-        <td>${m.order || 1}</td>
+        <td>${esc(m.role||'—')}</td>
+        <td>${m.order||1}</td>
         <td><div class="actions-cell">
-          <button class="action-btn edit" onclick="editTeamMember('${m.id}')">✏️ Edit</button>
+          <button class="action-btn edit"   onclick="safeCall(()=>editTeamMember('${m.id}'))">✏️ Edit</button>
           <button class="action-btn delete" onclick="confirmDeleteTeam('${m.id}','${escAttr(m.name)}')">🗑️ Delete</button>
         </div></td>
       </tr>`).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="panel-error"><strong>Could not load team.</strong><code>${e.message}</code></div></td></tr>`;
-  }
+  } catch (e) { showTableError('team-tbody', 5, e); }
 }
 
 function teamForm(m = {}) {
-  return `
-  <div>
+  return `<div>
     <div class="admin-form-row">
       <div class="form-group"><label class="form-label">Full Name *</label>
         <input name="name" class="form-input" value="${escAttr(m.name||'')}" required></div>
@@ -1127,15 +1113,12 @@ function teamForm(m = {}) {
         <input name="role" class="form-input" value="${escAttr(m.role||'')}" placeholder="e.g. Lead Designer"></div>
     </div>
     <div class="form-group"><label class="form-label">Bio</label>
-      <textarea name="bio" class="form-textarea" rows="3" placeholder="Brief biography…">${esc(m.bio||'')}</textarea></div>
+      <textarea name="bio" class="form-textarea" rows="3">${escTextarea(m.bio)}</textarea></div>
     <div class="admin-form-row">
-      <div class="form-group">
-        <label class="form-label">Photo URL</label>
-        <input name="image" class="form-input" value="${escAttr(m.image||'')}"
-               placeholder="https://…" oninput="previewImg(this,'team-img-preview')">
-        <img id="team-img-preview" class="img-preview" src="${escAttr(m.image||'')}"
-             style="${m.image?'display:block;border-radius:50%;':'display:none;'}" onerror="this.style.display='none'" alt="">
-      </div>
+      <div class="form-group"><label class="form-label">Photo URL</label>
+        <input name="image" class="form-input" value="${escAttr(m.image||'')}" placeholder="https://…"
+               oninput="previewImg(this,'team-img-preview')">
+        <img id="team-img-preview" class="img-preview" src="${escAttr(m.image||'')}" style="${m.image?'display:block;border-radius:50%':'display:none'}" onerror="this.style.display='none'" alt=""></div>
       <div class="form-group"><label class="form-label">Display Order</label>
         <input name="order" type="number" min="1" class="form-input" value="${m.order||1}"></div>
     </div>
@@ -1143,15 +1126,15 @@ function teamForm(m = {}) {
 }
 
 function collectTeamData() {
-  const data = {
+  const d = {
     name:  getModalField('name'),
     role:  getModalField('role'),
-    bio:   document.getElementById('modal-body').querySelector('[name="bio"]')?.value || '',
+    bio:   getModalField('bio'),
     image: getModalField('image'),
     order: parseInt(getModalField('order')) || 1
   };
-  if (!data.name) throw new Error('Name is required.');
-  return data;
+  if (!d.name.trim()) throw new Error('Name is required.');
+  return d;
 }
 
 function openTeamModal() {
@@ -1161,22 +1144,24 @@ function openTeamModal() {
     toast('✅ Team member added!');
     closeModal();
     await renderTeamAdmin();
-    logActivity(`Added team member: ${data.name}`);
+    logActivity('Added team member: ' + data.name);
   });
 }
 
 async function editTeamMember(id) {
+  openModal('Edit Team Member', '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>', null, 'Save Changes');
   const snap = await NamuDB._db.collection('team').doc(id).get();
-  if (!snap.exists) { toast('Team member not found.', 'error'); return; }
+  if (!snap.exists) { closeModal(); toast('Team member not found.', 'error'); return; }
   const m = { id, ...snap.data() };
-  openModal('Edit Team Member', teamForm(m), async () => {
+  document.getElementById('modal-body').innerHTML = teamForm(m);
+  _modalSaveFn = async () => {
     const data = collectTeamData();
     await NamuDB.updateTeamMember(id, data);
     toast('✅ Team member updated!');
     closeModal();
     await renderTeamAdmin();
-    logActivity(`Updated team member: ${data.name}`);
-  }, 'Save Changes');
+    logActivity('Updated team member: ' + data.name);
+  };
 }
 
 function confirmDeleteTeam(id, name) {
@@ -1184,41 +1169,34 @@ function confirmDeleteTeam(id, name) {
     await NamuDB.deleteTeamMember(id);
     toast('Team member removed.', 'info');
     await renderTeamAdmin();
-    logActivity(`Removed team member: ${name}`);
+    logActivity('Removed team member: ' + name);
   });
 }
 
 /* =================== INQUIRIES =================== */
 let _inqFilter = 'all';
-
 document.querySelectorAll('.inq-filter').forEach(btn =>
   btn.addEventListener('click', () => renderInquiries(btn.dataset.filter))
 );
 
 async function renderInquiries(filter = 'all') {
   _inqFilter = filter;
-  document.querySelectorAll('.inq-filter').forEach(b =>
-    b.classList.toggle('active', b.dataset.filter === filter)
-  );
-
+  document.querySelectorAll('.inq-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
   const list = document.getElementById('inquiries-list');
   list.innerHTML = '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>';
-
   try {
     const all   = await NamuDB.getInquiries();
     const items = filter === 'all' ? all : all.filter(i => i.status === filter);
-
     if (!items.length) {
       list.innerHTML = '<div class="admin-empty"><div class="empty-icon">📭</div><p>No inquiries in this category.</p></div>';
       refreshUnreadBadge();
       return;
     }
-
     list.innerHTML = items.map(i => `
-      <div class="inquiry-card ${i.read ? 'read' : 'unread'}">
+      <div class="inquiry-card ${i.read?'read':'unread'}">
         <div class="inquiry-meta">
-          <span class="inquiry-name">${esc(i.name || 'Anonymous')}</span>
-          <span class="badge badge-${i.status || 'new'}">${i.status || 'new'}</span>
+          <span class="inquiry-name">${esc(i.name||'Anonymous')}</span>
+          <span class="badge badge-${i.status||'new'}">${i.status||'new'}</span>
           ${i.type ? `<span class="badge badge-featured">${esc(i.type)}</span>` : ''}
           <span class="inquiry-date">${NamuDB.formatDateTime(i.createdAt)}</span>
         </div>
@@ -1231,25 +1209,24 @@ async function renderInquiries(filter = 'all') {
         <div class="actions-cell" style="margin-top:.75rem;">
           ${i.phone ? `<a href="tel:${esc(i.phone)}" class="action-btn view">📞 Call</a>` : ''}
           ${i.email ? `<a href="mailto:${esc(i.email)}" class="action-btn view">✉️ Email</a>` : ''}
-          <button class="action-btn edit" onclick="setInquiryStatus('${i.id}','replied')">✓ Mark Replied</button>
-          <button class="action-btn view" onclick="setInquiryStatus('${i.id}','closed')">Archive</button>
+          <button class="action-btn edit"   onclick="safeCall(()=>setInquiryStatus('${i.id}','replied'))">✓ Replied</button>
+          <button class="action-btn view"   onclick="safeCall(()=>setInquiryStatus('${i.id}','closed'))">Archive</button>
           <button class="action-btn delete" onclick="confirmDeleteInquiry('${i.id}')">🗑️ Delete</button>
         </div>
       </div>`).join('');
-
-    // Mark all displayed items as read
     items.filter(i => !i.read).forEach(i => NamuDB.markInquiryRead(i.id).catch(() => {}));
     refreshUnreadBadge();
   } catch (e) {
-    list.innerHTML = `<div class="panel-error"><strong>Could not load inquiries.</strong><code>${e.message}</code></div>`;
+    list.innerHTML = `<div class="panel-error"><strong>Could not load inquiries.</strong><code>${esc(e.message)}</code></div>`;
+    console.error(e);
   }
 }
 
 async function setInquiryStatus(id, status) {
   await NamuDB.updateInquiryStatus(id, status);
-  toast(`Marked as ${status}.`);
+  toast('Marked as ' + status + '.');
   await renderInquiries(_inqFilter);
-  logActivity(`Inquiry marked: ${status}`);
+  logActivity('Inquiry marked: ' + status);
 }
 
 function confirmDeleteInquiry(id) {
@@ -1267,124 +1244,99 @@ async function populateSettings() {
     const s    = await NamuDB.getSettings();
     const form = document.getElementById('settings-form');
     const set  = (name, val) => { const el = form.querySelector(`[name="${name}"]`); if (el) el.value = val || ''; };
-    set('phone', s.phone);
-    set('whatsapp', s.whatsapp);
-    set('email', s.email);
-    set('address', s.address);
-    set('instagram', s.instagram);
-    set('tiktok', s.tiktok);
-    set('facebook', s.facebook);
-    set('pinterest', s.pinterest);
+    set('phone', s.phone);     set('whatsapp', s.whatsapp);
+    set('email', s.email);     set('address', s.address);
+    set('instagram', s.instagram); set('tiktok', s.tiktok);
+    set('facebook', s.facebook);   set('pinterest', s.pinterest);
     if (s.businessHours) {
-      set('hours_monFri',    s.businessHours.monFri);
-      set('hours_saturday',  s.businessHours.saturday);
-      set('hours_sunday',    s.businessHours.sunday);
+      set('hours_monFri',   s.businessHours.monFri);
+      set('hours_saturday', s.businessHours.saturday);
+      set('hours_sunday',   s.businessHours.sunday);
     }
-  } catch (e) {
-    showError('settings', 'Could not load settings.', e);
-  }
+  } catch (e) { showError('settings', 'Could not load settings.', e); }
 }
 
 document.getElementById('settings-form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = e.target.querySelector('[type="submit"]');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const gv = name => e.target.querySelector(`[name="${name}"]`)?.value.trim() || '';
-    const updates = {
+    const gv = n => e.target.querySelector(`[name="${n}"]`)?.value.trim() || '';
+    await NamuDB.updateSettings({
       phone: gv('phone'), whatsapp: gv('whatsapp'), email: gv('email'), address: gv('address'),
       instagram: gv('instagram'), tiktok: gv('tiktok'), facebook: gv('facebook'), pinterest: gv('pinterest'),
       businessHours: { monFri: gv('hours_monFri'), saturday: gv('hours_saturday'), sunday: gv('hours_sunday') }
-    };
-    await NamuDB.updateSettings(updates);
-    toast('✅ Settings saved! Changes are live on the website.');
+    });
+    toast('✅ Settings saved! Live on the website now.');
     logActivity('Site settings updated');
   } catch (e) {
     toast(e.message || 'Save failed.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '💾 Save All Settings';
-  }
+    showError('settings', 'Settings could not be saved.', e);
+  } finally { btn.disabled = false; btn.textContent = '💾 Save All Settings'; }
 });
 
 /* =================== SECURITY =================== */
 document.getElementById('password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = e.target.querySelector('[type="submit"]');
-  btn.disabled = true;
-  btn.textContent = 'Updating…';
+  btn.disabled = true; btn.textContent = 'Updating…';
   try {
     const curr = e.target.querySelector('[name="current"]').value;
     const nw   = e.target.querySelector('[name="newpw"]').value;
     const conf = e.target.querySelector('[name="confirm"]').value;
-    if (nw !== conf) { toast('New passwords do not match.', 'error'); return; }
-    if (nw.length < 8) { toast('Password must be at least 8 characters.', 'error'); return; }
+    if (nw !== conf)    { toast('New passwords do not match.', 'error'); return; }
+    if (nw.length < 8)  { toast('Password must be at least 8 characters.', 'error'); return; }
     await NamuDB.updateAdminPassword(curr, nw);
-    toast('✅ Password updated successfully!');
+    toast('✅ Password updated!');
     e.target.reset();
     logActivity('Admin password changed');
   } catch (err) {
-    const msg = err.code === 'auth/wrong-password'
-      ? 'Current password is incorrect.'
-      : err.code === 'auth/requires-recent-login'
-      ? 'Please sign out and sign in again before changing your password.'
-      : err.message || 'Password update failed.';
+    const msg = err.code === 'auth/wrong-password'       ? 'Current password is incorrect.'
+              : err.code === 'auth/requires-recent-login' ? 'Please sign out and sign in again first.'
+              : err.message || 'Password update failed.';
     toast(msg, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Update Password';
-  }
+  } finally { btn.disabled = false; btn.textContent = 'Update Password'; }
 });
 
 function confirmReseed() {
-  showConfirm(
-    'Reseed Default Content?',
-    'This will ADD the default services, portfolio, blog posts, testimonials, and team member to your database. Existing content will NOT be deleted.',
+  showConfirm('Reseed Default Content?',
+    'This will ADD default content (services, portfolio, blog, testimonials, team) to the database. Existing content will NOT be deleted.',
     async () => {
       toast('Reseeding…', 'info');
       try {
         await NamuDB.seedDefaultData(msg => logActivity(msg));
-        toast('✅ Default content added successfully!');
+        toast('✅ Default content added!');
         await renderDashboard();
-      } catch (e) { toast(e.message, 'error'); }
-    },
-    'ℹ️',
-    'Yes, Add Defaults'
-  );
+      } catch (e) { toast(e.message, 'error'); console.error(e); }
+    }, 'ℹ️', 'Yes, Add Defaults');
 }
 
 /* =================== UTILITIES =================== */
-// Escape HTML for safe insertion into innerHTML
+// HTML-escape for use in innerHTML
 function esc(str) {
   if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-// Escape for use inside an HTML attribute value (already double-quoted)
+// HTML-escape for element attribute values
 function escAttr(str) {
   if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-
-// Live image preview in modal forms
+// FIX: safe textarea content escaping.
+// Escapes only & and < so that the textarea displays raw content correctly,
+// AND so that </textarea> inside content cannot break the form HTML.
+function escTextarea(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+}
+// Live image preview
 function previewImg(input, previewId) {
   const img = document.getElementById(previewId);
   if (!img) return;
   const val = input.value.trim();
-  if (val) {
-    img.src   = val;
-    img.style.display = 'block';
-    img.onerror = () => { img.style.display = 'none'; };
-  } else {
-    img.style.display = 'none';
-  }
+  img.src   = val || '';
+  img.style.display = val ? 'block' : 'none';
+  img.onerror = () => { img.style.display = 'none'; };
 }
 
 </script>
