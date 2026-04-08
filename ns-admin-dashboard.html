@@ -121,10 +121,22 @@
     <!-- ===== DASHBOARD ===== -->
     <div class="panel active" id="panel-dashboard">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon gold">🛎️</div><div><div class="stat-num" id="s-services">—</div><div class="stat-label">Services</div></div></div>
-        <div class="stat-card"><div class="stat-icon sienna">🖼️</div><div><div class="stat-num" id="s-portfolio">—</div><div class="stat-label">Projects</div></div></div>
-        <div class="stat-card"><div class="stat-icon sage">✍️</div><div><div class="stat-num" id="s-blog">—</div><div class="stat-label">Articles</div></div></div>
-        <div class="stat-card"><div class="stat-icon espresso">📩</div><div><div class="stat-num" id="s-inquiries">—</div><div class="stat-label">Inquiries</div></div></div>
+        <div class="stat-card" onclick="switchPanel('services')" style="cursor:pointer;" title="Click to manage services">
+          <div class="stat-icon gold">🛎️</div>
+          <div><div class="stat-num" id="s-services">—</div><div class="stat-label">Services</div></div>
+        </div>
+        <div class="stat-card" onclick="switchPanel('portfolio')" style="cursor:pointer;" title="Click to manage portfolio">
+          <div class="stat-icon sienna">🖼️</div>
+          <div><div class="stat-num" id="s-portfolio">—</div><div class="stat-label">Projects</div></div>
+        </div>
+        <div class="stat-card" onclick="switchPanel('blog')" style="cursor:pointer;" title="Click to manage blog">
+          <div class="stat-icon sage">✍️</div>
+          <div><div class="stat-num" id="s-blog">—</div><div class="stat-label">Articles</div></div>
+        </div>
+        <div class="stat-card" onclick="switchPanel('inquiries')" style="cursor:pointer;" title="Click to view inquiries">
+          <div class="stat-icon espresso">📩</div>
+          <div><div class="stat-num" id="s-inquiries">—</div><div class="stat-label">Inquiries</div></div>
+        </div>
       </div>
       <div class="content-grid">
         <div class="content-card">
@@ -379,6 +391,17 @@
     document.getElementById('config-banner').classList.remove('hidden');
     document.body.classList.add('has-banner');
   }
+
+  // Suppress the noisy "Unchecked runtime.lastError" messages that come from
+  // browser wallet extensions (MetaMask, Brave Wallet, etc.) injecting into
+  // the page. These are completely unrelated to the Namu Spaces dashboard.
+  // We override window.onerror temporarily so they don't flood the console.
+  const _origError = console.error.bind(console);
+  console.error = function(...args) {
+    const msg = args[0] ? String(args[0]) : '';
+    if (msg.includes('MetaMask') || msg.includes('inpage.js') || msg.includes('lockdown-install')) return;
+    _origError(...args);
+  };
 })();
 
 /* =================== AUTH GUARD =================== */
@@ -396,8 +419,8 @@ async function init() {
     refreshUnreadBadge();
     logActivity('Admin session started');
   } catch (e) {
-    // FIX: correct element id (was 'panel-dashboard' which made getElementById look for 'panel-panel-dashboard')
-    showError('dashboard', 'Could not load dashboard. Check your Firebase connection.', e);
+    showError('dashboard', 'Could not load dashboard data. Check your Firebase connection and Firestore rules.', e);
+    // Do not re-throw — prevent unhandled rejection in the browser console
   }
 }
 
@@ -613,15 +636,57 @@ async function safeCall(fn) {
 async function renderDashboard() {
   const rEl = document.getElementById('dash-recent-inquiries');
   rEl.innerHTML = '<div class="panel-loading"><div class="spinner"></div><span>Loading…</span></div>';
+
+  // Remove any existing seed banner from previous render
+  document.getElementById('dash-seed-banner')?.remove();
+
   try {
     const [svcs, portAll, blogAll, inqs] = await Promise.all([
       NamuDB.getServices(), NamuDB.getPortfolio('all'),
       NamuDB.getBlogPosts(false), NamuDB.getInquiries()
     ]);
+
     document.getElementById('s-services').textContent  = svcs.length;
     document.getElementById('s-portfolio').textContent = portAll.length;
     document.getElementById('s-blog').textContent      = blogAll.length;
     document.getElementById('s-inquiries').textContent = inqs.length;
+
+    // ── Empty database detection ──────────────────────────────────────────
+    // If all content collections are empty, the database has not been seeded.
+    // Show a prominent banner so the admin can seed with one click.
+    if (svcs.length === 0 && portAll.length === 0 && blogAll.length === 0) {
+      const banner = document.createElement('div');
+      banner.id = 'dash-seed-banner';
+      banner.style.cssText = `
+        background: linear-gradient(135deg,#8C5E3C,#C09A5E);
+        color:#FAFAF5; border-radius:12px; padding:1.75rem 2rem;
+        display:flex; align-items:center; justify-content:space-between;
+        gap:1.5rem; flex-wrap:wrap; margin-bottom:1.5rem;
+        box-shadow: 0 4px 20px rgba(140,94,60,0.3);
+      `;
+      banner.innerHTML = `
+        <div>
+          <div style="font-size:1.05rem;font-weight:700;margin-bottom:.35rem;">
+            📭 Database is empty — no content has been seeded yet
+          </div>
+          <div style="font-size:.875rem;opacity:.85;">
+            Your Firestore database has no services, portfolio items, or blog posts.
+            Click the button to populate it with default Namu Spaces content instantly.
+          </div>
+        </div>
+        <button onclick="quickSeed()" style="
+          background:#FAFAF5;color:#1A120B;border:none;border-radius:8px;
+          padding:.75rem 1.5rem;font-size:.85rem;font-weight:700;
+          cursor:pointer;white-space:nowrap;flex-shrink:0;
+          font-family:var(--font-body);letter-spacing:.04em;
+        ">🌱 Seed Default Content</button>`;
+
+      // Insert banner at the top of the dashboard panel, before stats
+      const statsGrid = document.querySelector('#panel-dashboard .stats-grid');
+      statsGrid?.parentElement.insertBefore(banner, statsGrid);
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     const recent = inqs.slice(0, 5);
     if (!recent.length) {
       rEl.innerHTML = '<div class="admin-empty"><div class="empty-icon">📭</div><p>No inquiries yet.</p></div>';
@@ -636,10 +701,38 @@ async function renderDashboard() {
           <div class="inquiry-excerpt">${esc((i.message || i.service || '(No message)').substring(0, 100))}</div>
         </div>`).join('');
     }
+
     logActivity(`Dashboard refreshed — ${inqs.filter(i => !i.read).length} unread`);
   } catch (e) {
     rEl.innerHTML = `<div class="panel-error"><strong>Could not load data.</strong><code>${esc(e.message)}</code></div>`;
-    throw e; // propagate so init() can show panel-level error
+    throw e;
+  }
+}
+
+/* ── Quick seed button on dashboard ─────────────────────────────────────── */
+async function quickSeed() {
+  const btn = document.querySelector('#dash-seed-banner button');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Seeding…'; }
+
+  try {
+    let step = 0;
+    const steps = 6;
+    await NamuDB.seedDefaultData(msg => {
+      step++;
+      if (btn) btn.textContent = `⏳ ${msg}`;
+      logActivity(msg);
+    });
+
+    toast('✅ Default content seeded successfully! Reloading dashboard…');
+    document.getElementById('dash-seed-banner')?.remove();
+
+    // Reload the dashboard stats so numbers update immediately
+    await renderDashboard();
+
+  } catch (e) {
+    toast(e.message || 'Seeding failed. Check console for details.', 'error');
+    console.error('[quickSeed]', e);
+    if (btn) { btn.disabled = false; btn.textContent = '🌱 Seed Default Content'; }
   }
 }
 
