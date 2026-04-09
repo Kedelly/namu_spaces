@@ -85,7 +85,7 @@ h2 { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400; }
 h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 500; }
 h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
 
-p { color: var(--cream); opacity: 0.85; }
+p { color: var(--charcoal); opacity: 0.85; }
 
 .eyebrow {
   font-family: var(--font-body);
