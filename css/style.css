@@ -927,7 +927,7 @@ p { color: var(--charcoal); opacity: 0.85; }
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--charcoal);
+  color: var(--mintcream);
   margin-bottom: 0.5rem;
 }
 .form-control {
