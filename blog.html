@@ -218,7 +218,7 @@
     </div>
   </div>
 
-   <!-- ===== Firebase SDK (must load before db.js) ===== -->
+    <!-- ===== Firebase SDK (must load before db.js) ===== -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -228,150 +228,216 @@
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
 
-    document.addEventListener('DOMContentLoaded', () => {
-      NamuDB.init();
+    /* ============================================================
+       BLOG PAGE — All NamuDB calls are async (Firestore).
+       Fixes applied:
+       1. Removed NamuDB.init() — no longer exists in Firestore db.js
+       2. DOMContentLoaded callback is now async
+       3. All NamuDB calls are properly awaited
+       4. postId passed as string (Firestore doc ID — not parseInt)
+       5. onerror attribute unescaped-quote bug fixed
+       6. Category filter and newsletter form also use async/await
+    ============================================================ */
+    document.addEventListener('DOMContentLoaded', async () => {
+
       const urlParams = new URLSearchParams(window.location.search);
-      const postId = urlParams.get('id');
+      const postId    = urlParams.get('id');
 
       if (postId) {
-        // Single post view
+        /* ===================== SINGLE POST VIEW ===================== */
         document.body.classList.add('post-view');
         const postContent = document.getElementById('blog-post-content');
-        const post = NamuDB.getBlogPost(parseInt(postId));
 
-        if (!post) {
-          postContent.innerHTML = '<div class="container"><div class="empty-state"><div class="empty-icon">📄</div><p>Article not found. <a href="blog.html">Return to blog →</a></p></div></div>';
-          return;
-        }
-
-        document.title = `${post.title} — Namu Spaces Blog`;
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.content = post.excerpt;
-
-        const team = NamuDB.getTeam();
-        const author = team.find(m => m.name === post.author) || {};
-        const authorImg = author.image || `https://placehold.co/80/e8d9c0/8c5e3c?text=${post.author?.charAt(0)||'N'}`;
-
-        // Get related posts (same category, excluding current)
-        const related = NamuDB.getBlogPosts()
-          .filter(p => p.id !== post.id && p.category === post.category)
-          .slice(0, 3);
-
+        // Show skeleton while fetching from Firestore
         postContent.innerHTML = `
           <section class="section" style="padding-top:8rem;">
-            <div class="container">
-              <div class="blog-detail-content">
-                <div class="breadcrumb" style="margin-bottom:2rem;">
-                  <a href="blog.html">Blog</a> / <span>${post.category}</span>
-                </div>
-                <span class="card-tag">${post.category}</span>
-                <h1 style="margin:1rem 0 1.5rem;font-size:clamp(2rem,5vw,3.2rem);">${post.title}</h1>
-                <div class="d-flex align-center gap-1" style="margin-bottom:2.5rem;flex-wrap:wrap;">
-                  <span class="text-muted" style="font-size:0.85rem;">By ${post.author}</span>
-                  <span class="text-muted" style="opacity:0.4;">·</span>
-                  <span class="text-muted" style="font-size:0.85rem;">${NamuDB.formatDate(post.date)}</span>
-                </div>
-                <div class="blog-detail-hero">
-                  <img src="${post.image}" alt="${post.title}" loading="lazy"
-                       onerror="this.src='https://placehold.co/900x450/e8d9c0/8c5e3c?text=Article'">
-                </div>
-                <div style="margin-top:3rem;">${post.content}</div>
-
-                <!-- Author bar -->
-                <div class="post-author-bar">
-                  <img src="${authorImg}" alt="${post.author}"
-                       onerror="this.src='https://placehold.co/80/e8d9c0/8c5e3c?text=${post.author?.charAt(0)||'N'}'">
-                  <div>
-                    <div style="font-weight:600;margin-bottom:0.2rem;">${post.author}</div>
-                    <div style="font-size:0.85rem;color:var(--sienna);">${author.role || 'Interior Designer, Namu Spaces'}</div>
-                    <div style="font-size:0.85rem;margin-top:0.4rem;opacity:0.7;">Based in Nairobi, Kenya</div>
-                  </div>
-                </div>
-
-                <!-- CTA -->
-                <div style="background:var(--sand-light);padding:2.5rem;border-radius:var(--radius-lg);text-align:center;margin:3rem 0;">
-                  <h3 style="margin-bottom:0.75rem;">Ready to Transform Your Space?</h3>
-                  <p style="margin-bottom:1.5rem;">Book a consultation with our Nairobi design team and take the first step.</p>
-                  <button class="btn btn-primary" data-open-modal="consultation">Book a Consultation</button>
-                </div>
-
-                <!-- Related Posts -->
-                ${related.length ? `
-                  <div class="related-posts">
-                    <h3 style="margin-bottom:2rem;">More from Our Blog</h3>
-                    <div class="grid-3">
-                      ${related.map(rp => `
-                        <a href="blog.html?id=${rp.id}" class="blog-card" style="text-decoration:none;">
-                          <div class="blog-card-img">
-                            <img src="${rp.image}" alt="${rp.title}" loading="lazy"
-                                 onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
-                          </div>
-                          <div class="blog-card-body">
-                            <div class="blog-meta"><span class="blog-cat">${rp.category}</span><span class="blog-date">${NamuDB.formatDate(rp.date)}</span></div>
-                            <h3 style="font-size:1.1rem;">${rp.title}</h3>
-                          </div>
-                        </a>
-                      `).join('')}
-                    </div>
-                  </div>
-                ` : ''}
-              </div>
+            <div class="container" style="max-width:860px;">
+              <div class="skeleton" style="height:56px;border-radius:8px;margin-bottom:1.5rem;width:65%;"></div>
+              <div class="skeleton" style="height:38px;border-radius:8px;margin-bottom:1rem;"></div>
+              <div class="skeleton" style="height:24px;border-radius:6px;margin-bottom:2.5rem;width:40%;"></div>
+              <div class="skeleton" style="height:460px;border-radius:12px;margin-bottom:2.5rem;"></div>
+              <div class="skeleton" style="height:160px;border-radius:8px;"></div>
             </div>
           </section>`;
 
-        // Re-init modal after dynamic render
-        document.querySelectorAll('[data-open-modal="consultation"]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.getElementById('consultation-modal')?.classList.add('open');
-            document.body.style.overflow = 'hidden';
+        try {
+          // FIX 1: await the async Firestore call
+          // FIX 2: postId is a Firestore string doc ID — do NOT use parseInt()
+          const post = await NamuDB.getBlogPost(postId);
+
+          if (!post) {
+            postContent.innerHTML = `
+              <div class="container" style="padding-top:8rem;text-align:center;">
+                <div class="empty-state">
+                  <div class="empty-icon">📄</div>
+                  <p>Article not found. <a href="blog.html" style="color:var(--sienna);">Return to blog →</a></p>
+                </div>
+              </div>`;
+            return;
+          }
+
+          document.title = post.title + ' — Namu Spaces Blog';
+          const metaDesc = document.querySelector('meta[name="description"]');
+          if (metaDesc) metaDesc.content = post.excerpt || '';
+
+          // FIX 3: await getTeam()
+          const team   = await NamuDB.getTeam();
+          const author = team.find(m => m.name === post.author) || {};
+
+          // FIX 4: build authorInitial separately — avoids broken single-quote
+          //         inside an onerror="" HTML attribute
+          const authorInitial = (post.author && post.author.length) ? post.author.charAt(0) : 'N';
+          const authorImg = author.image
+            || ('https://placehold.co/80/e8d9c0/8c5e3c?text=' + authorInitial);
+
+          // FIX 5: await getBlogPosts() for related articles
+          const allPosts = await NamuDB.getBlogPosts();
+          const related  = allPosts
+            .filter(p => p.id !== post.id && p.category === post.category)
+            .slice(0, 3);
+
+          postContent.innerHTML = `
+            <section class="section" style="padding-top:8rem;">
+              <div class="container" style="max-width:860px;">
+                <div class="blog-detail-content">
+                  <div class="breadcrumb" style="margin-bottom:2rem;">
+                    <a href="blog.html">Blog</a> / <span>${post.category}</span>
+                  </div>
+                  <span class="card-tag">${post.category}</span>
+                  <h1 style="margin:1rem 0 1.5rem;font-size:clamp(2rem,5vw,3.2rem);">${post.title}</h1>
+                  <div class="d-flex align-center gap-1" style="margin-bottom:2.5rem;flex-wrap:wrap;">
+                    <span class="text-muted" style="font-size:0.85rem;">By ${post.author}</span>
+                    <span class="text-muted" style="opacity:0.4;">·</span>
+                    <span class="text-muted" style="font-size:0.85rem;">${NamuDB.formatDate(post.date)}</span>
+                  </div>
+                  <div class="blog-detail-hero">
+                    <img src="${post.image}" alt="${post.title}" loading="lazy"
+                         onerror="this.src='https://placehold.co/900x450/e8d9c0/8c5e3c?text=Article'">
+                  </div>
+                  <div style="margin-top:3rem;">${post.content || ''}</div>
+
+                  <!-- Author bar -->
+                  <div class="post-author-bar">
+                    <img src="${authorImg}" alt="${post.author}"
+                         onerror="this.src='https://placehold.co/80/e8d9c0/8c5e3c?text=N'">
+                    <div>
+                      <div style="font-weight:600;margin-bottom:0.2rem;">${post.author}</div>
+                      <div style="font-size:0.85rem;color:var(--sienna);">${author.role || 'Interior Designer, Namu Spaces'}</div>
+                      <div style="font-size:0.85rem;margin-top:0.4rem;opacity:0.7;">Based in Nairobi, Kenya</div>
+                    </div>
+                  </div>
+
+                  <!-- CTA -->
+                  <div style="background:var(--sand-light);padding:2.5rem;border-radius:var(--radius-lg);text-align:center;margin:3rem 0;">
+                    <h3 style="margin-bottom:0.75rem;">Ready to Transform Your Space?</h3>
+                    <p style="margin-bottom:1.5rem;">Book a consultation with our Nairobi design team and take the first step.</p>
+                    <button class="btn btn-primary" data-open-modal="consultation">Book a Consultation</button>
+                  </div>
+
+                  <!-- Related Posts -->
+                  ${related.length ? `
+                    <div class="related-posts">
+                      <h3 style="margin-bottom:2rem;">More from Our Blog</h3>
+                      <div class="grid-3">
+                        ${related.map(rp => `
+                          <a href="blog.html?id=${rp.id}" class="blog-card" style="text-decoration:none;">
+                            <div class="blog-card-img">
+                              <img src="${rp.image}" alt="${rp.title}" loading="lazy"
+                                   onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
+                            </div>
+                            <div class="blog-card-body">
+                              <div class="blog-meta">
+                                <span class="blog-cat">${rp.category}</span>
+                                <span class="blog-date">${NamuDB.formatDate(rp.date)}</span>
+                              </div>
+                              <h3 style="font-size:1.1rem;">${rp.title}</h3>
+                            </div>
+                          </a>`).join('')}
+                      </div>
+                    </div>` : ''}
+                </div>
+              </div>
+            </section>`;
+
+          // Re-bind consultation modal triggers injected by innerHTML
+          document.querySelectorAll('[data-open-modal="consultation"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              document.getElementById('consultation-modal')?.classList.add('open');
+              document.body.style.overflow = 'hidden';
+            });
           });
-        });
+
+        } catch (err) {
+          console.error('[Blog] Could not load post:', err);
+          postContent.innerHTML = `
+            <div class="container" style="padding-top:8rem;text-align:center;">
+              <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <p style="color:var(--muted);">Could not load article. Please check your connection.</p>
+                <a href="blog.html" class="btn btn-outline" style="margin-top:1.5rem;">← Back to Blog</a>
+              </div>
+            </div>`;
+        }
+
       } else {
-        // Blog listing
-        const posts = NamuDB.getBlogPosts();
+        /* ===================== BLOG LISTING VIEW ===================== */
+
+        // FIX 6: await getBlogPosts() for the listing page
+        let posts = [];
+        try {
+          posts = await NamuDB.getBlogPosts();
+        } catch (err) {
+          console.error('[Blog listing]', err);
+        }
 
         // Hero featured layout (first 3 posts)
         const heroSection = document.getElementById('blog-hero-section');
-        if (heroSection && posts.length >= 1) {
-          const [featured, ...rest] = posts;
-          heroSection.innerHTML = `
-            <a href="blog.html?id=${featured.id}" class="blog-hero-card">
-              <img src="${featured.image}" alt="${featured.title}" loading="lazy"
-                   onerror="this.src='https://placehold.co/800x500/e8d9c0/8c5e3c?text=Article'">
-              <div class="blog-hero-overlay">
-                <span class="card-tag">${featured.category}</span>
-                <h2>${featured.title}</h2>
-                <p>${featured.excerpt.substring(0, 100)}…</p>
-                <div class="blog-meta"><span class="blog-date">${NamuDB.formatDate(featured.date)}</span></div>
-              </div>
-            </a>
-            <div class="blog-sidebar">
-              ${rest.slice(0, 2).map(p => `
-                <a href="blog.html?id=${p.id}" class="blog-hero-card">
-                  <img src="${p.image}" alt="${p.title}" loading="lazy"
-                       onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
-                  <div class="blog-hero-overlay">
-                    <span class="card-tag" style="font-size:0.65rem;">${p.category}</span>
-                    <h3>${p.title}</h3>
-                    <div class="blog-meta"><span class="blog-date" style="font-size:0.75rem;">${NamuDB.formatDate(p.date)}</span></div>
-                  </div>
-                </a>
-              `).join('')}
-            </div>
-          `;
+        if (heroSection) {
+          if (posts.length >= 1) {
+            const [featured, ...rest] = posts;
+            heroSection.innerHTML = `
+              <a href="blog.html?id=${featured.id}" class="blog-hero-card">
+                <img src="${featured.image}" alt="${featured.title}" loading="lazy"
+                     onerror="this.src='https://placehold.co/800x500/e8d9c0/8c5e3c?text=Article'">
+                <div class="blog-hero-overlay">
+                  <span class="card-tag">${featured.category}</span>
+                  <h2>${featured.title}</h2>
+                  <p>${(featured.excerpt || '').substring(0, 100)}…</p>
+                  <div class="blog-meta"><span class="blog-date">${NamuDB.formatDate(featured.date)}</span></div>
+                </div>
+              </a>
+              <div class="blog-sidebar">
+                ${rest.slice(0, 2).map(p => `
+                  <a href="blog.html?id=${p.id}" class="blog-hero-card">
+                    <img src="${p.image}" alt="${p.title}" loading="lazy"
+                         onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
+                    <div class="blog-hero-overlay">
+                      <span class="card-tag" style="font-size:0.65rem;">${p.category}</span>
+                      <h3>${p.title}</h3>
+                      <div class="blog-meta"><span class="blog-date" style="font-size:0.75rem;">${NamuDB.formatDate(p.date)}</span></div>
+                    </div>
+                  </a>`).join('')}
+              </div>`;
+          } else {
+            heroSection.innerHTML = '<div class="empty-state" style="grid-column:1/-1;padding:3rem;"><div class="empty-icon">✍️</div><p>No articles published yet.</p></div>';
+          }
         }
 
-        // Blog grid (all posts)
+        // Blog grid (all posts) — renderBlogCards in main.js is already async-safe
         renderBlogCards('blog-grid');
 
-        // Category filter
+        // Category filter — FIX 7: use already-fetched posts; re-fetch if needed
         document.querySelectorAll('#blog-cats .filter-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', async () => {
             document.querySelectorAll('#blog-cats .filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const cat = btn.dataset.cat;
-            const allPosts = NamuDB.getBlogPosts();
-            const filtered = cat === 'all' ? allPosts : allPosts.filter(p => p.category === cat);
+
+            // Re-fetch to ensure fresh data for filter
+            let filterPosts = posts;
+            try { filterPosts = await NamuDB.getBlogPosts(); } catch (_) {}
+
+            const filtered = cat === 'all' ? filterPosts : filterPosts.filter(p => p.category === cat);
             const grid = document.getElementById('blog-grid');
             if (!filtered.length) {
               grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">✍️</div><p>No articles in this category yet.</p></div>';
@@ -384,30 +450,34 @@
                        onerror="this.src='https://placehold.co/400x250/e8d9c0/8c5e3c?text=Article'">
                 </a>
                 <div class="blog-card-body">
-                  <div class="blog-meta"><span class="blog-cat">${post.category}</span><span class="blog-date">${NamuDB.formatDate(post.date)}</span></div>
+                  <div class="blog-meta">
+                    <span class="blog-cat">${post.category}</span>
+                    <span class="blog-date">${NamuDB.formatDate(post.date)}</span>
+                  </div>
                   <h3>${post.title}</h3>
-                  <p>${post.excerpt}</p>
+                  <p>${post.excerpt || ''}</p>
                   <a href="blog.html?id=${post.id}" class="blog-read-more">Read Article →</a>
                 </div>
-              </article>
-            `).join('');
+              </article>`).join('');
             initScrollAnimations();
           });
         });
 
-        // Newsletter form
-        document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
+        // Newsletter form — FIX 8: await addInquiry()
+        document.getElementById('newsletter-form')?.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const email = e.target.email.value;
-          NamuDB.addInquiry({ type: 'newsletter', email, name: 'Newsletter Subscriber' });
-          showToast('Thank you for subscribing! 🎉', 'success');
-          e.target.reset();
+          const email = e.target.email.value.trim();
+          if (!email) return;
+          try {
+            await NamuDB.addInquiry({ type: 'newsletter', email, name: 'Newsletter Subscriber' });
+            showToast('Thank you for subscribing! 🎉', 'success');
+            e.target.reset();
+          } catch (err) {
+            showToast('Could not subscribe. Please try again.', 'error');
+            console.error('[newsletter]', err);
+          }
         });
       }
-    });
-  </script>
-</body>
-</html>
     });
   </script>
 </body>
