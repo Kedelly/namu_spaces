@@ -235,7 +235,7 @@ p { color: var(--charcoal); opacity: 0.85; }
   height: 60px;
   width: 60px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 30px;
   mix-blend-mode: screen;
   flex-shrink: 0;
   /* Slight brightness boost so the icon pops on light backgrounds */
@@ -245,7 +245,7 @@ p { color: var(--charcoal); opacity: 0.85; }
 .navbar.dark-nav .nav-logo-img,
 .footer .nav-logo-img {
   mix-blend-mode: normal;
-  border-radius: 8px;
+  border-radius: 30px;
 }
 
 .nav-links {
