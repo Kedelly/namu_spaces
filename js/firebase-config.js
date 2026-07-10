@@ -4,7 +4,7 @@
  *
  * HOW TO FILL THIS IN:
  * 1. Go to https://console.firebase.google.com
- * 2. Open your project → Project Settings (⚙️ gear icon)
+ * 2. Open your project → Project Settings ( gear icon)
  * 3. Scroll to "Your apps" → select your web app
  * 4. Copy the firebaseConfig object values below
  * ============================================================
